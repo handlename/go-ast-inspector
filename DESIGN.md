@@ -2,11 +2,12 @@
 
 ## 文書情報
 
-**バージョン**: 1.2  
+**バージョン**: 1.3  
 **作成日**: 2025-11-23  
 **最終更新日**: 2025-11-24  
 **関連文書**: [REQUIREMENTS.md](./REQUIREMENTS.md)  
 **更新履歴**:
+- v1.3: HoverTooltip削除（要件変更）、HeaderBar追加、実装完了に伴う記載整理
 - v1.2: 双方向ハイライト機能追加（ソースコード↔ASTツリー連動）、highlightedRangeStore追加
 - v1.1: UIフレームワークをSvelte 5.xに変更、コンポーネント設計を全面改訂
 - v1.0: 初版作成（Vanilla TypeScript版）
@@ -87,7 +88,7 @@
 │  │  │  │  ├─ CodeEditor.svelte                  │  │  │ │
 │  │  │  │  ├─ ASTTreeView.svelte                 │  │  │ │
 │  │  │  │  ├─ TreeNode.svelte (recursive)        │  │  │ │
-│  │  │  │  ├─ HoverTooltip.svelte                │  │  │ │
+│  │  │  │  ├─ HeaderBar.svelte                   │  │  │ │
 │  │  │  │  └─ ErrorDisplay.svelte                │  │  │ │
 │  │  │  └────────────────────────────────────────┘  │  │ │
 │  │  │  ┌────────────────────────────────────────┐  │  │ │
@@ -126,10 +127,10 @@
 - **責務**: ユーザーインターフェースの表示と操作
 - **Svelteコンポーネント**:
   - `App.svelte`: ルートコンポーネント、レイアウト管理
-  - `CodeEditor.svelte`: ソースコード入力エディタ
+  - `CodeEditor.svelte`: ソースコード入力エディタ（双方向ハイライト機能付き）
   - `ASTTreeView.svelte`: AST木構造表示のコンテナ
-  - `TreeNode.svelte`: ツリーノード（再帰的コンポーネント）
-  - `HoverTooltip.svelte`: ホバー時の情報表示
+  - `TreeNode.svelte`: ツリーノード（再帰的コンポーネント、自動展開・ハイライト機能付き）
+  - `HeaderBar.svelte`: ヘッダーバーとコントロールボタン
   - `ErrorDisplay.svelte`: エラーメッセージ表示
 
 ---
@@ -161,9 +162,8 @@ go-ast-viewer/
 │   │   ├── CodeEditor.svelte       # コードエディタコンポーネント
 │   │   ├── ASTTreeView.svelte      # ASTツリービューコンポーネント
 │   │   ├── TreeNode.svelte         # ツリーノード（再帰）
-│   │   ├── HoverTooltip.svelte     # ホバーツールチップ
-│   │   ├── ErrorDisplay.svelte     # エラー表示
-│   │   └── HeaderBar.svelte        # ヘッダーバー
+│   │   ├── HeaderBar.svelte        # ヘッダーバー
+│   │   └── ErrorDisplay.svelte     # エラー表示
 │   └── styles/
 │       └── global.css              # グローバルスタイル
 ├── public/
@@ -947,7 +947,7 @@ npm run preview
 - **ツール**: @testing-library/svelte
 - **シナリオ**:
   - コード入力 → パース → AST表示（CodeEditor + ASTTreeView）
-  - ホバー → ツールチップ表示（CodeEditor + HoverTooltip）
+  - ツリーノード選択 → ソースコードハイライト（TreeNode → CodeEditor）
   - ノードクリック → 展開/折りたたみ（TreeNode + expandedNodesStore）
 
 ### 3. E2Eテスト（推奨）
