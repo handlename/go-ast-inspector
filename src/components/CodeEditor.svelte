@@ -10,6 +10,68 @@
     let textareaElement: HTMLTextAreaElement | undefined = $state();
     const positionMapper = $derived(new PositionMapper($sourceCodeStore));
 
+    // Go language syntax highlighting tokens
+    const GO_KEYWORDS =
+        /\b(break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|map|package|range|return|select|struct|switch|type|var)\b/g;
+    const GO_TYPES =
+        /\b(bool|byte|complex64|complex128|error|float32|float64|int|int8|int16|int32|int64|rune|string|uint|uint8|uint16|uint32|uint64|uintptr)\b/g;
+    const GO_LITERALS = /\b(true|false|nil|iota)\b/g;
+    const GO_STRINGS = /"(?:[^"\\]|\\.)*"|`[^`]*`/g;
+    const GO_COMMENTS = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+    const GO_NUMBERS = /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g;
+
+    function highlightSyntax(code: string): string {
+        if (!code) return "";
+
+        let highlighted = code;
+
+        // Escape HTML
+        highlighted = highlighted
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Comments (must be first to avoid highlighting inside comments)
+        highlighted = highlighted.replace(
+            GO_COMMENTS,
+            '<span class="token-comment">$&</span>',
+        );
+
+        // Strings
+        highlighted = highlighted.replace(
+            GO_STRINGS,
+            '<span class="token-string">$&</span>',
+        );
+
+        // Keywords
+        highlighted = highlighted.replace(
+            GO_KEYWORDS,
+            '<span class="token-keyword">$&</span>',
+        );
+
+        // Types
+        highlighted = highlighted.replace(
+            GO_TYPES,
+            '<span class="token-type">$&</span>',
+        );
+
+        // Literals
+        highlighted = highlighted.replace(
+            GO_LITERALS,
+            '<span class="token-literal">$&</span>',
+        );
+
+        // Numbers
+        highlighted = highlighted.replace(
+            GO_NUMBERS,
+            '<span class="token-number">$&</span>',
+        );
+
+        return highlighted;
+    }
+
+    const highlightedCode = $derived(highlightSyntax($sourceCodeStore));
+
     // ASTツリーからの選択を監視してハイライト範囲を設定
     $effect(() => {
         if ($selectedNodeStore) {
@@ -199,6 +261,11 @@
         </h2>
     </div>
     <div class="code-editor__wrapper">
+        <div class="code-editor__syntax-layer" aria-hidden="true">
+            <pre class="code-editor__syntax-pre"><code
+                    >{@html highlightedCode}</code
+                ></pre>
+        </div>
         <div class="code-editor__highlight-layer" aria-hidden="true">
             {#if $highlightedRangeStore}
                 {#each getHighlightedLines() as line}
@@ -252,6 +319,28 @@
         background-color: #fafafa;
     }
 
+    .code-editor__syntax-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .code-editor__syntax-pre {
+        margin: 0;
+        padding: 1rem;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #333;
+        tab-size: 4;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
     .code-editor__highlight-layer {
         position: absolute;
         top: 0;
@@ -290,5 +379,33 @@
 
     .code-editor__textarea::placeholder {
         color: #999;
+    }
+
+    /* Syntax highlighting colors */
+    :global(.code-editor__syntax-pre .token-keyword) {
+        color: #0000ff;
+        font-weight: 600;
+    }
+
+    :global(.code-editor__syntax-pre .token-type) {
+        color: #267f99;
+        font-weight: 500;
+    }
+
+    :global(.code-editor__syntax-pre .token-literal) {
+        color: #0000ff;
+    }
+
+    :global(.code-editor__syntax-pre .token-string) {
+        color: #a31515;
+    }
+
+    :global(.code-editor__syntax-pre .token-comment) {
+        color: #008000;
+        font-style: italic;
+    }
+
+    :global(.code-editor__syntax-pre .token-number) {
+        color: #098658;
     }
 </style>
