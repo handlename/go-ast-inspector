@@ -94,8 +94,12 @@ func convertNode(fset *token.FileSet, node ast.Node) ASTNode {
 		if n.Type != nil {
 			astNode.Children = append(astNode.Children, convertNode(fset, n.Type))
 		}
-		for _, name := range n.Names {
-			astNode.Metadata["names"] = append(astNode.Metadata["names"].([]string), name.Name)
+		if len(n.Names) > 0 {
+			names := make([]string, 0, len(n.Names))
+			for _, name := range n.Names {
+				names = append(names, name.Name)
+			}
+			astNode.Metadata["names"] = names
 		}
 
 	case *ast.BlockStmt:
@@ -138,6 +142,172 @@ func convertNode(fset *token.FileSet, node ast.Node) ASTNode {
 		if n.Name != nil {
 			astNode.Metadata["name"] = n.Name.Name
 		}
+
+	case *ast.ValueSpec:
+		if len(n.Names) > 0 {
+			names := make([]string, 0, len(n.Names))
+			for _, name := range n.Names {
+				names = append(names, name.Name)
+			}
+			astNode.Metadata["names"] = names
+		}
+		if n.Type != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Type))
+		}
+		for _, value := range n.Values {
+			astNode.Children = append(astNode.Children, convertNode(fset, value))
+		}
+
+	case *ast.TypeSpec:
+		if n.Name != nil {
+			astNode.Metadata["name"] = n.Name.Name
+		}
+		if n.Type != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Type))
+		}
+
+	case *ast.StarExpr:
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+
+	case *ast.ArrayType:
+		if n.Len != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Len))
+		}
+		if n.Elt != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Elt))
+		}
+
+	case *ast.StructType:
+		if n.Fields != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Fields))
+		}
+
+	case *ast.InterfaceType:
+		if n.Methods != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Methods))
+		}
+
+	case *ast.CompositeLit:
+		if n.Type != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Type))
+		}
+		for _, elt := range n.Elts {
+			astNode.Children = append(astNode.Children, convertNode(fset, elt))
+		}
+
+	case *ast.KeyValueExpr:
+		if n.Key != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Key))
+		}
+		if n.Value != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Value))
+		}
+
+	case *ast.ParenExpr:
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+
+	case *ast.UnaryExpr:
+		astNode.Metadata["op"] = n.Op.String()
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+
+	case *ast.BinaryExpr:
+		astNode.Metadata["op"] = n.Op.String()
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+		if n.Y != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Y))
+		}
+
+	case *ast.AssignStmt:
+		astNode.Metadata["tok"] = n.Tok.String()
+		for _, lhs := range n.Lhs {
+			astNode.Children = append(astNode.Children, convertNode(fset, lhs))
+		}
+		for _, rhs := range n.Rhs {
+			astNode.Children = append(astNode.Children, convertNode(fset, rhs))
+		}
+
+	case *ast.ReturnStmt:
+		for _, result := range n.Results {
+			astNode.Children = append(astNode.Children, convertNode(fset, result))
+		}
+
+	case *ast.IfStmt:
+		if n.Init != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Init))
+		}
+		if n.Cond != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Cond))
+		}
+		if n.Body != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Body))
+		}
+		if n.Else != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Else))
+		}
+
+	case *ast.ForStmt:
+		if n.Init != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Init))
+		}
+		if n.Cond != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Cond))
+		}
+		if n.Post != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Post))
+		}
+		if n.Body != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Body))
+		}
+
+	case *ast.RangeStmt:
+		astNode.Metadata["tok"] = n.Tok.String()
+		if n.Key != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Key))
+		}
+		if n.Value != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Value))
+		}
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+		if n.Body != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Body))
+		}
+
+	case *ast.IncDecStmt:
+		astNode.Metadata["tok"] = n.Tok.String()
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+
+	case *ast.IndexExpr:
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+		if n.Index != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Index))
+		}
+
+	case *ast.TypeAssertExpr:
+		if n.X != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.X))
+		}
+		if n.Type != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Type))
+		}
+
+	case *ast.DeclStmt:
+		if n.Decl != nil {
+			astNode.Children = append(astNode.Children, convertNode(fset, n.Decl))
+		}
 	}
 
 	return astNode
@@ -171,6 +341,46 @@ func getNodeType(node ast.Node) string {
 		return "GenDecl"
 	case *ast.ImportSpec:
 		return "ImportSpec"
+	case *ast.ValueSpec:
+		return "ValueSpec"
+	case *ast.TypeSpec:
+		return "TypeSpec"
+	case *ast.StarExpr:
+		return "StarExpr"
+	case *ast.ArrayType:
+		return "ArrayType"
+	case *ast.StructType:
+		return "StructType"
+	case *ast.InterfaceType:
+		return "InterfaceType"
+	case *ast.CompositeLit:
+		return "CompositeLit"
+	case *ast.KeyValueExpr:
+		return "KeyValueExpr"
+	case *ast.ParenExpr:
+		return "ParenExpr"
+	case *ast.UnaryExpr:
+		return "UnaryExpr"
+	case *ast.BinaryExpr:
+		return "BinaryExpr"
+	case *ast.AssignStmt:
+		return "AssignStmt"
+	case *ast.ReturnStmt:
+		return "ReturnStmt"
+	case *ast.IfStmt:
+		return "IfStmt"
+	case *ast.ForStmt:
+		return "ForStmt"
+	case *ast.RangeStmt:
+		return "RangeStmt"
+	case *ast.IncDecStmt:
+		return "IncDecStmt"
+	case *ast.IndexExpr:
+		return "IndexExpr"
+	case *ast.TypeAssertExpr:
+		return "TypeAssertExpr"
+	case *ast.DeclStmt:
+		return "DeclStmt"
 	default:
 		return "Unknown"
 	}
