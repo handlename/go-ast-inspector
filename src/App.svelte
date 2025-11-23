@@ -94,7 +94,7 @@
     {:else if initError}
         <ErrorDisplay message={initError} />
     {:else}
-        <div class="main-content">
+        <div class="main-content" role="main">
             <div class="editor-panel" style="width: {editorWidth}%">
                 <CodeEditor />
             </div>

@@ -194,10 +194,12 @@
 
 <div class="code-editor">
     <div class="code-editor__header">
-        <h2 class="code-editor__title">Go Source Code</h2>
+        <h2 class="code-editor__title" id="code-editor-title">
+            Go Source Code
+        </h2>
     </div>
     <div class="code-editor__wrapper">
-        <div class="code-editor__highlight-layer">
+        <div class="code-editor__highlight-layer" aria-hidden="true">
             {#if $highlightedRangeStore}
                 {#each getHighlightedLines() as line}
                     <div
@@ -217,6 +219,8 @@
             onblur={handleBlur}
             spellcheck="false"
             placeholder="Enter Go source code here..."
+            aria-label="Go source code editor"
+            aria-labelledby="code-editor-title"
         ></textarea>
     </div>
 </div>

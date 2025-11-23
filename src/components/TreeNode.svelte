@@ -108,14 +108,28 @@
     class="tree-node"
     class:tree-node--selected={isSelected}
     bind:this={nodeElement}
+    role="treeitem"
+    aria-expanded={hasChildren ? isExpanded : undefined}
+    aria-selected={isSelected}
+    aria-level={level + 1}
 >
     <div
         class="tree-node__line"
         style="padding-left: {level * 1.5}rem"
         onclick={handleClick}
-        role="button"
         tabindex="0"
-        onkeydown={(e) => e.key === "Enter" && handleClick()}
+        onkeydown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleClick();
+            } else if (e.key === "ArrowRight" && hasChildren && !isExpanded) {
+                e.preventDefault();
+                toggleExpand();
+            } else if (e.key === "ArrowLeft" && hasChildren && isExpanded) {
+                e.preventDefault();
+                toggleExpand();
+            }
+        }}
     >
         {#if hasChildren}
             <button

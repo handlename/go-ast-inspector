@@ -1,43 +1,59 @@
 <script lang="ts">
-import type { ASTNode } from '$lib/core/types';
-import { astStore, expandedNodesStore } from '$lib/stores/ast-store';
-import { DEFAULT_EXPAND_LEVEL } from '$lib/utils/constants';
-import TreeNode from './TreeNode.svelte';
+    import type { ASTNode } from "$lib/core/types";
+    import { astStore, expandedNodesStore } from "$lib/stores/ast-store";
+    import { DEFAULT_EXPAND_LEVEL } from "$lib/utils/constants";
+    import TreeNode from "./TreeNode.svelte";
 
-function expandAll() {
-  if (!$astStore) return;
+    function expandAll() {
+        if (!$astStore) return;
 
-  const allNodeIds = new Set<string>();
-  collectNodeIds($astStore, allNodeIds);
-  expandedNodesStore.set(allNodeIds);
-}
+        const allNodeIds = new Set<string>();
+        collectNodeIds($astStore, allNodeIds);
+        expandedNodesStore.set(allNodeIds);
+    }
 
-function collapseAll() {
-  expandedNodesStore.set(new Set());
-}
+    function collapseAll() {
+        expandedNodesStore.set(new Set());
+    }
 
-function collectNodeIds(node: ASTNode, ids: Set<string>, prefix = '0'): void {
-  ids.add(prefix);
-  node.children.forEach((child, index) => {
-    collectNodeIds(child, ids, `${prefix}-${index}`);
-  });
-}
+    function collectNodeIds(
+        node: ASTNode,
+        ids: Set<string>,
+        prefix = "0",
+    ): void {
+        ids.add(prefix);
+        node.children.forEach((child, index) => {
+            collectNodeIds(child, ids, `${prefix}-${index}`);
+        });
+    }
 </script>
 
 <div class="ast-tree-view">
     <div class="ast-tree-view__header">
-        <h2 class="ast-tree-view__title">AST Tree</h2>
+        <h2 class="ast-tree-view__title" id="ast-tree-title">AST Tree</h2>
         <div class="ast-tree-view__controls">
-            <button class="ast-tree-view__button" onclick={expandAll}>
+            <button
+                class="ast-tree-view__button"
+                onclick={expandAll}
+                aria-label="Expand all tree nodes"
+            >
                 Expand All
             </button>
-            <button class="ast-tree-view__button" onclick={collapseAll}>
+            <button
+                class="ast-tree-view__button"
+                onclick={collapseAll}
+                aria-label="Collapse all tree nodes"
+            >
                 Collapse All
             </button>
         </div>
     </div>
 
-    <div class="ast-tree-view__content">
+    <div
+        class="ast-tree-view__content"
+        role="tree"
+        aria-labelledby="ast-tree-title"
+    >
         {#if $astStore}
             <TreeNode
                 node={$astStore}
@@ -46,7 +62,7 @@ function collectNodeIds(node: ASTNode, ids: Set<string>, prefix = '0'): void {
                 defaultExpandLevel={DEFAULT_EXPAND_LEVEL}
             />
         {:else}
-            <p class="ast-tree-view__empty">
+            <p class="ast-tree-view__empty" role="status">
                 No AST available. Enter valid Go code to see the AST.
             </p>
         {/if}
