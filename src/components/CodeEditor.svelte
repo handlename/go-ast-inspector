@@ -23,49 +23,64 @@
     function highlightSyntax(code: string): string {
         if (!code) return "";
 
-        let highlighted = code;
-
-        // Escape HTML
-        highlighted = highlighted
+        // First escape HTML
+        let highlighted = code
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
 
+        // Create a temporary marker system to avoid conflicts
+        const markers: Array<{ placeholder: string; replacement: string }> = [];
+        let markerIndex = 0;
+
+        // Helper function to create temporary markers
+        function createMarker(match: string, className: string): string {
+            const placeholder = `___MARKER_${markerIndex}___`;
+            markers.push({
+                placeholder,
+                replacement: `<span class="${className}">${match}</span>`,
+            });
+            markerIndex++;
+            return placeholder;
+        }
+
         // Comments (must be first to avoid highlighting inside comments)
-        highlighted = highlighted.replace(
-            GO_COMMENTS,
-            '<span class="token-comment">$&</span>',
+        highlighted = highlighted.replace(GO_COMMENTS, (match) =>
+            createMarker(match, "token-comment"),
         );
 
         // Strings
-        highlighted = highlighted.replace(
-            GO_STRINGS,
-            '<span class="token-string">$&</span>',
+        highlighted = highlighted.replace(GO_STRINGS, (match) =>
+            createMarker(match, "token-string"),
         );
 
         // Keywords
-        highlighted = highlighted.replace(
-            GO_KEYWORDS,
-            '<span class="token-keyword">$&</span>',
+        highlighted = highlighted.replace(GO_KEYWORDS, (match) =>
+            createMarker(match, "token-keyword"),
         );
 
         // Types
-        highlighted = highlighted.replace(
-            GO_TYPES,
-            '<span class="token-type">$&</span>',
+        highlighted = highlighted.replace(GO_TYPES, (match) =>
+            createMarker(match, "token-type"),
         );
 
         // Literals
-        highlighted = highlighted.replace(
-            GO_LITERALS,
-            '<span class="token-literal">$&</span>',
+        highlighted = highlighted.replace(GO_LITERALS, (match) =>
+            createMarker(match, "token-literal"),
         );
 
         // Numbers
-        highlighted = highlighted.replace(
-            GO_NUMBERS,
-            '<span class="token-number">$&</span>',
+        highlighted = highlighted.replace(GO_NUMBERS, (match) =>
+            createMarker(match, "token-number"),
         );
+
+        // Replace all markers with actual HTML
+        for (const marker of markers) {
+            highlighted = highlighted.replace(
+                marker.placeholder,
+                marker.replacement,
+            );
+        }
 
         return highlighted;
     }
