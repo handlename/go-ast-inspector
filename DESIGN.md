@@ -2,11 +2,12 @@
 
 ## 文書情報
 
-**バージョン**: 1.1  
+**バージョン**: 1.2  
 **作成日**: 2025-11-23  
-**最終更新日**: 2025-11-23  
+**最終更新日**: 2025-11-24  
 **関連文書**: [REQUIREMENTS.md](./REQUIREMENTS.md)  
 **更新履歴**:
+- v1.2: 双方向ハイライト機能追加（ソースコード↔ASTツリー連動）、highlightedRangeStore追加
 - v1.1: UIフレームワークをSvelte 5.xに変更、コンポーネント設計を全面改訂
 - v1.0: 初版作成（Vanilla TypeScript版）
 
@@ -212,6 +213,15 @@ export const expandedNodesStore = writable<Set<string>>(new Set());
 
 // 選択されたノードを保持するStore
 export const selectedNodeStore = writable<ASTNode | null>(null);
+
+// ソースコードのハイライト範囲を保持するStore
+export const highlightedRangeStore = writable<{
+  start: number;  // 開始位置（バイトオフセット）
+  end: number;    // 終了位置（バイトオフセット）
+} | null>(null);
+
+// ソースコードを保持するStore
+export const sourceCodeStore = writable<string>("");
 ```
 
 #### src/core/parser-bridge.ts
@@ -312,7 +322,14 @@ class PositionMapper {
 <script lang="ts">
   import { onMount } from 'svelte';
   import { parseCode } from '$lib/core/parser-bridge';
-  import { astStore, parseErrorStore } from '$lib/stores/ast-store';
+  import { 
+    astStore, 
+    parseErrorStore, 
+    selectedNodeStore,
+    highlightedRangeStore,
+    sourceCodeStore 
+  } from '$lib/stores/ast-store';
+  import { PositionMapper } from '$lib/core/position-mapper';
   
   export let defaultCode = `package main
 
@@ -322,11 +339,14 @@ func main() {
     fmt.Println("Hello, World!")
 }`;
   
-  let code = defaultCode;
-  let highlightedRange: { start: number; end: number } | null = null;
+  let code = $state(defaultCode);
+  let textareaElement: HTMLTextAreaElement | undefined = $state();
+  
+  const positionMapper = $derived(new PositionMapper(code));
   
   async function handleInput() {
     const result = await parseCode(code);
+    sourceCodeStore.set(code);
     
     if (result.success && result.ast) {
       astStore.set(result.ast);
@@ -338,17 +358,45 @@ func main() {
   }
   
   function handleClick(event: MouseEvent) {
-    // クリック位置のカーソルオフセットを取得
-    // PositionMapperでASTノードを特定
-    // selectedNodeStoreを更新
+    if (!textareaElement) return;
+    
+    setTimeout(() => {
+      const cursorPos = textareaElement.selectionStart;
+      const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
+      selectedNodeStore.set(node);
+      
+      if (node) {
+        highlightedRangeStore.set({ start: node.pos, end: node.end });
+      } else {
+        highlightedRangeStore.set(null);
+      }
+    }, 0);
   }
   
   function handleSelectionChange() {
-    // カーソル移動時にもASTノードを更新
+    if (!textareaElement) return;
+    const cursorPos = textareaElement.selectionStart;
+    const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
+    selectedNodeStore.set(node);
+    
+    if (node) {
+      highlightedRangeStore.set({ start: node.pos, end: node.end });
+    } else {
+      highlightedRangeStore.set(null);
+    }
   }
   
+  // ASTツリーからの選択を監視してハイライト表示
+  $effect(() => {
+    if ($selectedNodeStore) {
+      highlightedRangeStore.set({
+        start: $selectedNodeStore.pos,
+        end: $selectedNodeStore.end
+      });
+    }
+  });
+  
   onMount(() => {
-    // 初回パース
     handleInput();
   });
 </script>
@@ -356,13 +404,17 @@ func main() {
 <div class="code-editor">
   <textarea
     bind:value={code}
-    on:input={handleInput}
-    on:click={handleClick}
-    on:keyup={handleSelectionChange}
+    bind:this={textareaElement}
+    oninput={handleInput}
+    onclick={handleClick}
+    onkeyup={handleSelectionChange}
     spellcheck="false"
     placeholder="Enter Go code here..."
   />
-  <!-- シンタックスハイライト表示レイヤー -->
+  <!-- ハイライト表示レイヤー（背景） -->
+  {#if $highlightedRangeStore}
+    <div class="highlight-overlay" style="..."></div>
+  {/if}
 </div>
 ```
 
@@ -417,7 +469,9 @@ ParseResult 取得
         エラー行をハイライト
 ```
 
-### 3. クリック連動ハイライトフロー
+### 3. 双方向ハイライトフロー
+
+#### 3-1. ソースコード → ASTツリー連動
 
 ```
 ユーザーがコード上でクリック/カーソル移動
@@ -432,11 +486,33 @@ PositionMapper.findNodeAtOffset(offset)
     ↓
 selectedNodeStore.set(node)
     ↓
-ASTTreeView が selectedNode を監視
+TreeNode が selectedNode を監視
     ↓
 該当ノードまでの枝を自動展開
     ↓
 該当ノードをハイライト表示
+    ↓
+該当ノードまで自動スクロール
+```
+
+#### 3-2. ASTツリー → ソースコード連動
+
+```
+ユーザーがTreeNode上でクリック
+    ↓
+TreeNode.onClick イベント発火
+    ↓
+selectedNodeStore.set(node)
+    ↓
+CodeEditor が selectedNode を監視
+    ↓
+ノードのpos/endから該当範囲を計算
+    ↓
+highlightedRangeStore.set({start: pos, end: end})
+    ↓
+CodeEditor内の該当範囲をハイライト表示
+    ↓
+該当範囲まで自動スクロール（推奨）
 ```
 
 ### 4. ツリー操作フロー
@@ -493,11 +569,13 @@ ASTTreeView.toggleNode(nodeId)
 
 #### 2. Code Editor
 - **機能**:
-  - シンタックスハイライト（Go言語）
-  - 行番号表示
-  - ホバー時のハイライト
+  - シンタックスハイライト（Go言語、推奨）
+  - 行番号表示（推奨）
+  - クリック/カーソル移動時のASTノード選択
+  - 選択されたASTノードに対応するコード範囲のハイライト表示
   - エラー行のマーキング
 - **使用技術**: `<textarea>` + カスタムハイライト実装
+- **ハイライト表示**: 選択されたASTノードの範囲を背景色で強調表示
 
 #### 3. AST Tree View
 - **機能**:
