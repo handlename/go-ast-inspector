@@ -327,6 +327,7 @@
         bottom: 0;
         pointer-events: none;
         overflow: hidden;
+        z-index: 1;
     }
 
     .code-editor__syntax-pre {
@@ -349,6 +350,7 @@
         bottom: 0;
         pointer-events: none;
         overflow: hidden;
+        z-index: 2;
     }
 
     .highlight-line {
@@ -373,12 +375,18 @@
         outline: none;
         resize: none;
         background-color: transparent;
-        color: #333;
+        color: transparent;
+        caret-color: #333;
         tab-size: 4;
+        z-index: 3;
     }
 
     .code-editor__textarea::placeholder {
         color: #999;
+    }
+
+    .code-editor__textarea::selection {
+        background-color: rgba(0, 123, 255, 0.3);
     }
 
     /* Syntax highlighting colors */
