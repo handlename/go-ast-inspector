@@ -1,4 +1,4 @@
-import type { ASTNode, ParseResult } from './types';
+import type { ASTNode, ParseResult } from "./types";
 
 declare global {
   interface Window {
@@ -14,15 +14,20 @@ export class ParserBridge {
   private wasmInstance: WebAssembly.Instance | null = null;
   private isInitialized = false;
 
-  async initialize(wasmUrl: string, wasmExecUrl: string): Promise<void> {
+  async initialize(wasmUrl: string): Promise<void> {
     if (this.isInitialized) {
       return;
     }
 
-    await this.loadWasmExec(wasmExecUrl);
+    if (!window.Go) {
+      throw new Error("wasm_exec.js not loaded");
+    }
 
     const go = new window.Go();
-    const result = await WebAssembly.instantiateStreaming(fetch(wasmUrl), go.importObject);
+    const result = await WebAssembly.instantiateStreaming(
+      fetch(wasmUrl),
+      go.importObject,
+    );
 
     this.wasmInstance = result.instance;
     go.run(this.wasmInstance);
@@ -30,20 +35,10 @@ export class ParserBridge {
     this.isInitialized = true;
   }
 
-  private async loadWasmExec(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = url;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load wasm_exec.js'));
-      document.head.appendChild(script);
-    });
-  }
-
   parse(sourceCode: string): ParseResult {
     if (!this.isInitialized || !window.parseGoCode) {
       return {
-        error: 'Parser not initialized',
+        error: "Parser not initialized",
       };
     }
 
@@ -59,10 +54,10 @@ export class ParserBridge {
         return { ast };
       }
 
-      return { error: 'No AST returned' };
+      return { error: "No AST returned" };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

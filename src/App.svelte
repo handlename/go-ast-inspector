@@ -13,7 +13,7 @@
 
     onMount(async () => {
         try {
-            await parserBridge.initialize("/parser.wasm", "/wasm_exec.js");
+            await parserBridge.initialize("/parser.wasm");
             handleParse($sourceCodeStore);
         } catch (error) {
             initError =
