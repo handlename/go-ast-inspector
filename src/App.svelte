@@ -46,7 +46,43 @@
             handleParse(code);
         }
     });
+
+    let editorWidth = $state(50);
+    let isResizing = $state(false);
+
+    function handleMouseDown() {
+        isResizing = true;
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+        if (!isResizing) return;
+
+        const container = document.querySelector(".main-content");
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const percentage =
+            ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+        editorWidth = Math.max(20, Math.min(80, percentage));
+    }
+
+    function handleMouseUp() {
+        isResizing = false;
+    }
+
+    onMount(() => {
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    });
 </script>
+
+<svelte:window onmousemove={handleMouseMove} onmouseup={handleMouseUp} />
 
 <div class="app">
     <HeaderBar />
@@ -59,10 +95,20 @@
         <ErrorDisplay message={initError} />
     {:else}
         <div class="main-content">
-            <div class="editor-panel">
+            <div class="editor-panel" style="width: {editorWidth}%">
                 <CodeEditor />
             </div>
-            <div class="ast-panel">
+            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+            <div
+                class="splitter"
+                onmousedown={handleMouseDown}
+                role="separator"
+                aria-label="Resize panels"
+                aria-orientation="vertical"
+                aria-valuenow={editorWidth}
+                tabindex="0"
+            ></div>
+            <div class="ast-panel" style="width: {100 - editorWidth}%">
                 <ASTTreeView />
             </div>
         </div>
@@ -75,6 +121,7 @@
         flex-direction: column;
         height: 100vh;
         width: 100%;
+        min-width: 800px;
     }
 
     .loading {
@@ -88,15 +135,53 @@
         display: flex;
         flex: 1;
         overflow: hidden;
+        position: relative;
     }
 
     .editor-panel,
     .ast-panel {
-        flex: 1;
         overflow: auto;
+        min-width: 300px;
     }
 
-    .editor-panel {
-        border-right: 1px solid #e0e0e0;
+    .splitter {
+        width: 4px;
+        background-color: #e0e0e0;
+        cursor: col-resize;
+        flex-shrink: 0;
+        transition: background-color 0.2s;
+        user-select: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .splitter:hover {
+        background-color: #2196f3;
+    }
+
+    .splitter:active {
+        background-color: #1976d2;
+    }
+
+    @media (max-width: 800px) {
+        .app {
+            min-width: 100%;
+        }
+
+        .main-content {
+            flex-direction: column;
+        }
+
+        .editor-panel,
+        .ast-panel {
+            width: 100% !important;
+            min-width: 100%;
+            min-height: 300px;
+        }
+
+        .splitter {
+            display: none;
+        }
     }
 </style>
