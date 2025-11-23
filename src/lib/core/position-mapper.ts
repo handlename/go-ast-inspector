@@ -51,10 +51,12 @@ export class PositionMapper {
     }
 
     // Search children for a more specific match
-    for (const child of ast.children) {
-      const childResult = this.findNodeAtOffset(child, offset);
-      if (childResult) {
-        return childResult;
+    if (ast.children && ast.children.length > 0) {
+      for (const child of ast.children) {
+        const childResult = this.findNodeAtOffset(child, offset);
+        if (childResult) {
+          return childResult;
+        }
       }
     }
 
