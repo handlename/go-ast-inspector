@@ -179,7 +179,7 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 - Built with [Svelte](https://svelte.dev/)
 - AST parsing powered by [Go](https://golang.org/)
-- Inspired by [AST Explorer](https://astexplorer.net/)
+- Inspired by [goast-viewer](https://yuroyoro.github.io/goast-viewer/)
 
 ## Author
 
