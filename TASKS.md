@@ -455,7 +455,7 @@
 
 ### 6-2. GitHub Actions設定
 
-- [ ] GitHub Actionsワークフロー作成
+- [x] GitHub Actionsワークフロー作成
   - 目的: GitHub Pagesへの自動デプロイを設定する
   - 詳細:
     - .github/workflows/deploy.ymlを作成
@@ -463,9 +463,9 @@
     - WASMビルド → Viteビルド → デプロイのパイプライン
     - mainブランチへのpushトリガー
   - 完了条件:
-    - [ ] ワークフローファイルが存在する
-    - [ ] DESIGN.mdの仕様に従っている
-    - [ ] ローカルでビルドが成功する
+    - [x] ワークフローファイルが存在する
+    - [x] DESIGN.mdの仕様に従っている
+    - [x] ローカルでビルドが成功する
 
 - [ ] GitHub Pages設定
   - 目的: GitHub Pagesでの公開を有効化する
