@@ -1,48 +1,52 @@
 <script lang="ts">
-import { parserBridge } from '$lib/core/parser-bridge';
-import { astStore, parseErrorStore } from '$lib/stores/ast-store';
-import { sourceCodeStore } from '$lib/stores/editor-store';
-import { onMount } from 'svelte';
-import ASTTreeView from './components/ASTTreeView.svelte';
-import CodeEditor from './components/CodeEditor.svelte';
-import ErrorDisplay from './components/ErrorDisplay.svelte';
-import HeaderBar from './components/HeaderBar.svelte';
+    import { parserBridge } from "$lib/core/parser-bridge";
+    import { astStore, parseErrorStore } from "$lib/stores/ast-store";
+    import { sourceCodeStore } from "$lib/stores/editor-store";
+    import { onMount } from "svelte";
+    import ASTTreeView from "./components/ASTTreeView.svelte";
+    import CodeEditor from "./components/CodeEditor.svelte";
+    import ErrorDisplay from "./components/ErrorDisplay.svelte";
+    import HeaderBar from "./components/HeaderBar.svelte";
+    import HoverTooltip from "./components/HoverTooltip.svelte";
 
-let isInitializing = $state(true);
-let initError = $state<string | null>(null);
+    let isInitializing = $state(true);
+    let initError = $state<string | null>(null);
 
-onMount(async () => {
-  try {
-    await parserBridge.initialize('/parser.wasm', '/wasm_exec.js');
-    handleParse($sourceCodeStore);
-  } catch (error) {
-    initError = error instanceof Error ? error.message : 'Failed to initialize parser';
-  } finally {
-    isInitializing = false;
-  }
-});
-
-function handleParse(code: string) {
-  const result = parserBridge.parse(code);
-
-  if (result.error) {
-    parseErrorStore.set({
-      message: result.error,
-      line: 0,
-      column: 0,
+    onMount(async () => {
+        try {
+            await parserBridge.initialize("/parser.wasm", "/wasm_exec.js");
+            handleParse($sourceCodeStore);
+        } catch (error) {
+            initError =
+                error instanceof Error
+                    ? error.message
+                    : "Failed to initialize parser";
+        } finally {
+            isInitializing = false;
+        }
     });
-    astStore.set(null);
-  } else if (result.ast) {
-    astStore.set(result.ast);
-    parseErrorStore.set(null);
-  }
-}
 
-sourceCodeStore.subscribe((code) => {
-  if (!isInitializing && !initError) {
-    handleParse(code);
-  }
-});
+    function handleParse(code: string) {
+        const result = parserBridge.parse(code);
+
+        if (result.error) {
+            parseErrorStore.set({
+                message: result.error,
+                line: 0,
+                column: 0,
+            });
+            astStore.set(null);
+        } else if (result.ast) {
+            astStore.set(result.ast);
+            parseErrorStore.set(null);
+        }
+    }
+
+    sourceCodeStore.subscribe((code) => {
+        if (!isInitializing && !initError) {
+            handleParse(code);
+        }
+    });
 </script>
 
 <div class="app">
@@ -64,6 +68,8 @@ sourceCodeStore.subscribe((code) => {
             </div>
         </div>
     {/if}
+
+    <HoverTooltip />
 </div>
 
 <style>

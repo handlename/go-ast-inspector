@@ -1,10 +1,44 @@
 <script lang="ts">
-import { sourceCodeStore } from '$lib/stores/editor-store';
+    import { PositionMapper } from "$lib/core/position-mapper";
+    import { astStore, selectedNodeStore } from "$lib/stores/ast-store";
+    import { sourceCodeStore } from "$lib/stores/editor-store";
 
-function handleInput(event: Event) {
-  const target = event.target as HTMLTextAreaElement;
-  sourceCodeStore.set(target.value);
-}
+    const textareaElement: HTMLTextAreaElement | undefined = $state();
+    const positionMapper = $derived(new PositionMapper($sourceCodeStore));
+
+    function handleInput(event: Event) {
+        const target = event.target as HTMLTextAreaElement;
+        sourceCodeStore.set(target.value);
+    }
+
+    function handleMouseMove(event: MouseEvent) {
+        if (!textareaElement) return;
+
+        const textarea = textareaElement;
+        const rect = textarea.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Calculate character position from mouse coordinates
+        const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
+        const charWidth = parseFloat(getComputedStyle(textarea).fontSize) * 0.6; // Approximate monospace width
+
+        const line = Math.floor(y / lineHeight) + 1;
+        const column = Math.floor(x / charWidth) + 1;
+
+        const offset = positionMapper.positionToOffset(line, column);
+        if (offset === -1) {
+            selectedNodeStore.set(null);
+            return;
+        }
+
+        const node = positionMapper.findNodeAtOffset($astStore, offset);
+        selectedNodeStore.set(node);
+    }
+
+    function handleMouseLeave() {
+        selectedNodeStore.set(null);
+    }
 </script>
 
 <div class="code-editor">
@@ -12,9 +46,12 @@ function handleInput(event: Event) {
         <h2 class="code-editor__title">Go Source Code</h2>
     </div>
     <textarea
+        bind:this={textareaElement}
         class="code-editor__textarea"
         value={$sourceCodeStore}
         oninput={handleInput}
+        onmousemove={handleMouseMove}
+        onmouseleave={handleMouseLeave}
         spellcheck="false"
         placeholder="Enter Go source code here..."
     ></textarea>
