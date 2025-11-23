@@ -33,6 +33,8 @@ pnpm-debug.log*
 src/wasm/*.wasm
 src/wasm/*.js
 !src/wasm/wasm_exec.js
+public/parser.wasm
+public/wasm_exec.js
 
 # OS
 Thumbs.db

@@ -1,4 +1,4 @@
-import type { ParseResult, ASTNode } from './types';
+import type { ASTNode, ParseResult } from './types';
 
 declare global {
   interface Window {

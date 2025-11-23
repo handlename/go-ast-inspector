@@ -33,6 +33,15 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "dist", "build", "coverage", "src/wasm/*.wasm", "src/wasm/*.js"]
+    "ignore": [
+      "node_modules",
+      "dist",
+      "build",
+      "coverage",
+      "src/wasm/*.wasm",
+      "src/wasm/*.js",
+      "public/parser.wasm",
+      "public/wasm_exec.js"
+    ]
   }
 }

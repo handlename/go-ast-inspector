@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { APP_NAME } from '$lib/utils/constants';
+import { APP_NAME } from '$lib/utils/constants';
 </script>
 
 <header class="header-bar">
