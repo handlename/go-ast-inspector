@@ -337,9 +337,14 @@ func main() {
     }
   }
   
-  function handleMouseMove(event: MouseEvent) {
-    // ホバー位置からASTノードを特定
+  function handleClick(event: MouseEvent) {
+    // クリック位置のカーソルオフセットを取得
+    // PositionMapperでASTノードを特定
     // selectedNodeStoreを更新
+  }
+  
+  function handleSelectionChange() {
+    // カーソル移動時にもASTノードを更新
   }
   
   onMount(() => {
@@ -352,7 +357,8 @@ func main() {
   <textarea
     bind:value={code}
     on:input={handleInput}
-    on:mousemove={handleMouseMove}
+    on:click={handleClick}
+    on:keyup={handleSelectionChange}
     spellcheck="false"
     placeholder="Enter Go code here..."
   />
@@ -411,23 +417,26 @@ ParseResult 取得
         エラー行をハイライト
 ```
 
-### 3. ホバー表示フロー
+### 3. クリック連動ハイライトフロー
 
 ```
-ユーザーがコード上でホバー
+ユーザーがコード上でクリック/カーソル移動
     ↓
-CodeEditor.onHover イベント発火
+CodeEditor.onClick/onKeyUp イベント発火
     ↓
-PositionMapper.getNodeAtPosition(line, column)
+カーソル位置(offset)を取得
+    ↓
+PositionMapper.findNodeAtOffset(offset)
     ↓
 対応するASTノードを取得
     ↓
-HoverTooltip.show(node)
+selectedNodeStore.set(node)
     ↓
-ツールチップ表示
-    ├─ ノードタイプ
-    ├─ 位置情報
-    └─ その他メタデータ
+ASTTreeView が selectedNode を監視
+    ↓
+該当ノードまでの枝を自動展開
+    ↓
+該当ノードをハイライト表示
 ```
 
 ### 4. ツリー操作フロー
@@ -496,16 +505,10 @@ ASTTreeView.toggleNode(nodeId)
   - ノードクリックで展開/折りたたみ
   - ノードタイプの視覚的区別（色分け）
   - 選択ノードのハイライト
+  - コードエディタでの選択位置に応じた自動展開・ハイライト
 - **使用技術**: 仮想DOM不使用、効率的なDOM操作
 
-#### 4. Hover Tooltip
-- **表示内容**:
-  - ノードタイプ (e.g., `*ast.FuncDecl`)
-  - 位置情報 (Line:Column)
-  - ノード固有の属性
-- **表示タイミング**: マウスホバー時に遅延表示（300ms）
-
-#### 5. Error Display
+#### 4. Error Display
 - **表示内容**:
   - エラーメッセージ
   - エラー発生位置（行・列）
