@@ -1,0 +1,29 @@
+{
+  "name": "go-ast-viewer",
+  "version": "0.1.0",
+  "description": "Browser-based Go AST viewer with standalone operation",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:wasm && vite build",
+    "build:wasm": "cd src/wasm && ./build.sh",
+    "preview": "vite preview",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "type-check": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit"
+  },
+  "dependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-singlefile": "^2.0.0"
+  },
+  "author": "",
+  "license": "MIT"
+}
