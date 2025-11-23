@@ -3,7 +3,7 @@
     import { astStore, selectedNodeStore } from "$lib/stores/ast-store";
     import { sourceCodeStore } from "$lib/stores/editor-store";
 
-    const textareaElement: HTMLTextAreaElement | undefined = $state();
+    let textareaElement: HTMLTextAreaElement | undefined = $state();
     const positionMapper = $derived(new PositionMapper($sourceCodeStore));
 
     function handleInput(event: Event) {
@@ -11,32 +11,44 @@
         sourceCodeStore.set(target.value);
     }
 
-    function handleMouseMove(event: MouseEvent) {
+    function handleClick(event: MouseEvent) {
         if (!textareaElement) return;
 
         const textarea = textareaElement;
-        const rect = textarea.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
 
-        // Calculate character position from mouse coordinates
-        const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
-        const charWidth = parseFloat(getComputedStyle(textarea).fontSize) * 0.6; // Approximate monospace width
+        // Get cursor position after click
+        setTimeout(() => {
+            const cursorPos = textarea.selectionStart;
 
-        const line = Math.floor(y / lineHeight) + 1;
-        const column = Math.floor(x / charWidth) + 1;
+            if (cursorPos === undefined || cursorPos < 0) {
+                selectedNodeStore.set(null);
+                return;
+            }
 
-        const offset = positionMapper.positionToOffset(line, column);
-        if (offset === -1) {
+            const node = positionMapper.findNodeAtOffset(
+                $astStore,
+                cursorPos + 1,
+            ); // AST positions are 1-based
+            selectedNodeStore.set(node);
+        }, 0);
+    }
+
+    function handleSelectionChange() {
+        if (!textareaElement) return;
+
+        const textarea = textareaElement;
+        const cursorPos = textarea.selectionStart;
+
+        if (cursorPos === undefined || cursorPos < 0) {
             selectedNodeStore.set(null);
             return;
         }
 
-        const node = positionMapper.findNodeAtOffset($astStore, offset);
+        const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
         selectedNodeStore.set(node);
     }
 
-    function handleMouseLeave() {
+    function handleBlur() {
         selectedNodeStore.set(null);
     }
 </script>
@@ -50,8 +62,9 @@
         class="code-editor__textarea"
         value={$sourceCodeStore}
         oninput={handleInput}
-        onmousemove={handleMouseMove}
-        onmouseleave={handleMouseLeave}
+        onclick={handleClick}
+        onkeyup={handleSelectionChange}
+        onblur={handleBlur}
         spellcheck="false"
         placeholder="Enter Go source code here..."
     ></textarea>

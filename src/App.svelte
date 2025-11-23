@@ -7,7 +7,6 @@
     import CodeEditor from "./components/CodeEditor.svelte";
     import ErrorDisplay from "./components/ErrorDisplay.svelte";
     import HeaderBar from "./components/HeaderBar.svelte";
-    import HoverTooltip from "./components/HoverTooltip.svelte";
 
     let isInitializing = $state(true);
     let initError = $state<string | null>(null);
@@ -68,8 +67,6 @@
             </div>
         </div>
     {/if}
-
-    <HoverTooltip />
 </div>
 
 <style>
