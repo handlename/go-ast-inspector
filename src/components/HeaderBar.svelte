@@ -1,12 +1,12 @@
 <script lang="ts">
-import { APP_NAME } from '$lib/utils/constants';
+    import { APP_NAME } from "$lib/utils/constants";
 
-const VERSION = '0.1.0';
-const REPOSITORY_URL = 'https://github.com/handlename/go-ast-inspector';
-const AUTHOR_URL = 'https://github.com/handlename';
+    const VERSION = "0.1.0";
+    const REPOSITORY_URL = "https://github.com/handlename/go-ast-inspector";
+    const AUTHOR_URL = "https://github.com/handlename";
 </script>
 
-<header class="header-bar" role="banner">
+<header class="header-bar">
     <div class="header-bar__main">
         <div class="header-bar__title-section">
             <h1 class="header-bar__title">{APP_NAME}</h1>
