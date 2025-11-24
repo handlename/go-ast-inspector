@@ -12,16 +12,16 @@ import (
 )
 
 type ASTNode struct {
-	Type     string                 `json:"type"`
-	Pos      int                    `json:"pos"`
-	End      int                    `json:"end"`
-	Children []ASTNode              `json:"children"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Type     string         `json:"type"`
+	Pos      int            `json:"pos"`
+	End      int            `json:"end"`
+	Children []ASTNode      `json:"children"`
+	Metadata map[string]any `json:"metadata"`
 }
 
 func parseGoCode(this js.Value, args []js.Value) interface{} {
 	if len(args) < 1 {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": "Source code argument is required",
 		}
 	}
@@ -31,7 +31,7 @@ func parseGoCode(this js.Value, args []js.Value) interface{} {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "input.go", sourceCode, parser.AllErrors|parser.ParseComments)
 	if err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": err.Error(),
 		}
 	}
@@ -39,12 +39,12 @@ func parseGoCode(this js.Value, args []js.Value) interface{} {
 	astNode := convertNode(fset, file)
 	result, err := json.Marshal(astNode)
 	if err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": "Failed to serialize AST: " + err.Error(),
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"ast": string(result),
 	}
 }
@@ -59,7 +59,7 @@ func convertNode(fset *token.FileSet, node ast.Node) ASTNode {
 		Pos:      int(node.Pos()),
 		End:      int(node.End()),
 		Children: []ASTNode{},
-		Metadata: make(map[string]interface{}),
+		Metadata: make(map[string]any),
 	}
 
 	switch n := node.(type) {
