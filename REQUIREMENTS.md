@@ -1,4 +1,4 @@
-# Go AST Viewer - 要件定義書
+# Go AST Inspector - 要件定義書
 
 ## プロジェクト概要
 

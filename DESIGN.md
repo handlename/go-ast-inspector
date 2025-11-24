@@ -1,4 +1,4 @@
-# Go AST Viewer - 技術設計書
+# Go AST Inspector - 技術設計書
 
 ## 文書情報
 
@@ -30,7 +30,7 @@
 
 ## 概要
 
-本設計書は、Go AST Viewerプロジェクトの技術的な実装方針を定義する。REQUIREMENTS.mdで定義された要件を満たすため、WebAssembly技術とモダンなフロントエンド技術を組み合わせた設計を採用する。
+本設計書は、Go AST Inspectorプロジェクトの技術的な実装方針を定義する。REQUIREMENTS.mdで定義された要件を満たすため、WebAssembly技術とモダンなフロントエンド技術を組み合わせた設計を採用する。
 
 ### 設計方針
 

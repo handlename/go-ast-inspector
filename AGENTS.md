@@ -1,4 +1,4 @@
-# Go AST Viewer - AI Agent Instructions
+# Go AST Inspector - AI Agent Instructions
 
 このファイルは、AIエージェント（Claude Code等）がこのプロジェクトで作業する際に参照すべき重要な情報を記載しています。
 
@@ -6,7 +6,7 @@
 
 ## プロジェクト概要
 
-**Go AST Viewer** は、Go言語のソースコードから抽象構文木(AST)を取得し、ブラウザ上で直感的に可視化するスタンドアローンツールです。
+**Go AST Inspector** は、Go言語のソースコードから抽象構文木(AST)を取得し、ブラウザ上で直感的に可視化するスタンドアローンツールです。
 
 - **提供形態**: 単一HTMLファイルとして配布可能
 - **主要技術**: TypeScript, Svelte 5.x, Go WebAssembly, Vite

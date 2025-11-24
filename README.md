@@ -1,4 +1,4 @@
-# Go AST Viewer
+# Go AST Inspector
 
 Browser-based Abstract Syntax Tree (AST) viewer for Go language source code, operating entirely standalone without any external dependencies.
 

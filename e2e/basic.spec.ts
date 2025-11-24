@@ -1,26 +1,22 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Go AST Viewer - Basic Functionality", () => {
+test.describe("Go AST Inspector - Basic Functionality", () => {
   test("should load the application", async ({ page }) => {
     await page.goto("/");
 
     // Check title
-    await expect(page).toHaveTitle(/Go AST Viewer/);
+    await expect(page).toHaveTitle(/Go AST Inspector/);
 
     // Check header
-    await expect(page.getByRole("banner")).toContainText("Go AST Viewer");
+    await expect(page.getByRole("banner")).toContainText("Go AST Inspector");
     await expect(page.getByRole("banner")).toContainText(
       "Visualize Go Abstract Syntax Tree",
     );
 
     // Check version, repository, and author links
     await expect(page.getByRole("banner")).toContainText("v0.1.0");
-    await expect(
-      page.getByRole("link", { name: "Repository" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "@handlename" }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Repository" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "@handlename" })).toBeVisible();
   });
 
   test("should display default Hello World code", async ({ page }) => {

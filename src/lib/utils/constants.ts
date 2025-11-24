@@ -7,5 +7,5 @@ func main() {
 }
 `;
 
-export const APP_NAME = 'Go AST Viewer';
+export const APP_NAME = "Go AST Inspector";
 export const DEFAULT_EXPAND_LEVEL = 2;
