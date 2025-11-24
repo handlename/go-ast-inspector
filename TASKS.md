@@ -467,16 +467,16 @@ This document defines the tasks required for implementing Go AST Inspector in a 
     - [x] Follows DESIGN.md specifications
     - [x] Build succeeds locally
 
-- [ ] GitHub Pages Configuration
+- [x] GitHub Pages Configuration
   - Purpose: Enable publication on GitHub Pages
   - Details:
     - Enable GitHub Pages in repository settings
     - Configure deploy permissions from GitHub Actions
     - Custom domain configuration (optional)
   - Completion Criteria:
-    - [ ] GitHub Pages is enabled
-    - [ ] Deploy permissions are configured
-    - [ ] Public URL works
+    - [x] GitHub Pages is enabled
+    - [x] Deploy permissions are configured
+    - [x] Public URL works
 
 ---
 
