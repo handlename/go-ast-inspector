@@ -1,81 +1,85 @@
 <script lang="ts">
-import { parserBridge } from '$lib/core/parser-bridge';
-import { astStore, parseErrorStore } from '$lib/stores/ast-store';
-import { sourceCodeStore } from '$lib/stores/editor-store';
-import { onMount } from 'svelte';
-import ASTTreeView from './components/ASTTreeView.svelte';
-import CodeEditor from './components/CodeEditor.svelte';
-import ErrorDisplay from './components/ErrorDisplay.svelte';
-import HeaderBar from './components/HeaderBar.svelte';
+    import { parserBridge } from "$lib/core/parser-bridge";
+    import { astStore, parseErrorStore } from "$lib/stores/ast-store";
+    import { sourceCodeStore } from "$lib/stores/editor-store";
+    import { onMount } from "svelte";
+    import ASTTreeView from "./components/ASTTreeView.svelte";
+    import CodeEditor from "./components/CodeEditor.svelte";
+    import ErrorDisplay from "./components/ErrorDisplay.svelte";
+    import HeaderBar from "./components/HeaderBar.svelte";
 
-let isInitializing = $state(true);
-let initError = $state<string | null>(null);
+    let isInitializing = $state(true);
+    let initError = $state<string | null>(null);
 
-onMount(async () => {
-  try {
-    await parserBridge.initialize('/parser.wasm');
-    handleParse($sourceCodeStore);
-  } catch (error) {
-    initError = error instanceof Error ? error.message : 'Failed to initialize parser';
-  } finally {
-    isInitializing = false;
-  }
-});
-
-function handleParse(code: string) {
-  const result = parserBridge.parse(code);
-
-  if (result.error) {
-    parseErrorStore.set({
-      message: result.error,
-      line: 0,
-      column: 0,
+    onMount(async () => {
+        try {
+            await parserBridge.initialize("/parser.wasm");
+            handleParse($sourceCodeStore);
+        } catch (error) {
+            initError =
+                error instanceof Error
+                    ? error.message
+                    : "Failed to initialize parser";
+        } finally {
+            isInitializing = false;
+        }
     });
-    astStore.set(null);
-  } else if (result.ast) {
-    astStore.set(result.ast);
-    parseErrorStore.set(null);
-  }
-}
 
-sourceCodeStore.subscribe((code) => {
-  if (!isInitializing && !initError) {
-    handleParse(code);
-  }
-});
+    function handleParse(code: string) {
+        const result = parserBridge.parse(code);
 
-let editorWidth = $state(50);
-let isResizing = $state(false);
+        if (result.error) {
+            parseErrorStore.set({
+                message: result.error,
+                line: 0,
+                column: 0,
+            });
+            astStore.set(null);
+        } else if (result.ast) {
+            astStore.set(result.ast);
+            parseErrorStore.set(null);
+        }
+    }
 
-function handleMouseDown() {
-  isResizing = true;
-}
+    sourceCodeStore.subscribe((code) => {
+        if (!isInitializing && !initError) {
+            handleParse(code);
+        }
+    });
 
-function handleMouseMove(e: MouseEvent) {
-  if (!isResizing) return;
+    let editorWidth = $state(50);
+    let isResizing = $state(false);
 
-  const container = document.querySelector('.main-content');
-  if (!container) return;
+    function handleMouseDown() {
+        isResizing = true;
+    }
 
-  const containerRect = container.getBoundingClientRect();
-  const percentage = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    function handleMouseMove(e: MouseEvent) {
+        if (!isResizing) return;
 
-  editorWidth = Math.max(20, Math.min(80, percentage));
-}
+        const container = document.querySelector(".main-content");
+        if (!container) return;
 
-function handleMouseUp() {
-  isResizing = false;
-}
+        const containerRect = container.getBoundingClientRect();
+        const percentage =
+            ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
-onMount(() => {
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+        editorWidth = Math.max(20, Math.min(80, percentage));
+    }
 
-  return () => {
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  };
-});
+    function handleMouseUp() {
+        isResizing = false;
+    }
+
+    onMount(() => {
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    });
 </script>
 
 <svelte:window onmousemove={handleMouseMove} onmouseup={handleMouseUp} />
@@ -95,6 +99,7 @@ onMount(() => {
                 <CodeEditor />
             </div>
             <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div
                 class="splitter"
                 onmousedown={handleMouseDown}
