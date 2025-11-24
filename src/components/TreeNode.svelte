@@ -1,107 +1,99 @@
 <script lang="ts">
-    import type { ASTNode } from "$lib/core/types";
-    import {
-        expandedNodesStore,
-        selectedNodeStore,
-    } from "$lib/stores/ast-store";
+import type { ASTNode } from '$lib/core/types';
+import { expandedNodesStore, selectedNodeStore } from '$lib/stores/ast-store';
 
-    interface Props {
-        node: ASTNode;
-        level: number;
-        nodeId: string;
-        defaultExpandLevel: number;
+interface Props {
+  node: ASTNode;
+  level: number;
+  nodeId: string;
+  defaultExpandLevel: number;
+}
+
+const { node, level, nodeId, defaultExpandLevel }: Props = $props();
+
+let nodeElement: HTMLDivElement | undefined = $state();
+
+const isExpanded = $derived($expandedNodesStore.has(nodeId));
+const isSelected = $derived(
+  $selectedNodeStore?.pos === node.pos && $selectedNodeStore?.end === node.end,
+);
+const hasChildren = $derived(node.children && node.children.length > 0);
+
+function toggleExpand() {
+  expandedNodesStore.update((nodes) => {
+    const newNodes = new Set(nodes);
+    if (newNodes.has(nodeId)) {
+      newNodes.delete(nodeId);
+    } else {
+      newNodes.add(nodeId);
     }
+    return newNodes;
+  });
+}
 
-    const { node, level, nodeId, defaultExpandLevel }: Props = $props();
+function handleClick() {
+  selectedNodeStore.set(node);
+}
 
-    let nodeElement: HTMLDivElement | undefined = $state();
+function formatMetadata(metadata: Record<string, unknown>): string {
+  const entries = Object.entries(metadata);
+  if (entries.length === 0) return '';
 
-    const isExpanded = $derived($expandedNodesStore.has(nodeId));
-    const isSelected = $derived(
-        $selectedNodeStore?.pos === node.pos &&
-            $selectedNodeStore?.end === node.end,
-    );
-    const hasChildren = $derived(node.children && node.children.length > 0);
+  return entries
+    .map(([key, value]) => {
+      if (value === null || value === undefined) return null;
+      return `${key}=${JSON.stringify(value)}`;
+    })
+    .filter(Boolean)
+    .join(', ');
+}
 
-    function toggleExpand() {
-        expandedNodesStore.update((nodes) => {
-            const newNodes = new Set(nodes);
-            if (newNodes.has(nodeId)) {
-                newNodes.delete(nodeId);
-            } else {
-                newNodes.add(nodeId);
-            }
-            return newNodes;
-        });
-    }
+const metadataStr = $derived(formatMetadata(node.metadata));
 
-    function handleClick() {
-        selectedNodeStore.set(node);
-    }
-
-    function formatMetadata(metadata: Record<string, unknown>): string {
-        const entries = Object.entries(metadata);
-        if (entries.length === 0) return "";
-
-        return entries
-            .map(([key, value]) => {
-                if (value === null || value === undefined) return null;
-                return `${key}=${JSON.stringify(value)}`;
-            })
-            .filter(Boolean)
-            .join(", ");
-    }
-
-    const metadataStr = $derived(formatMetadata(node.metadata));
-
-    $effect(() => {
-        // Default expand level
-        if (level < defaultExpandLevel && hasChildren && !isExpanded) {
-            expandedNodesStore.update((nodes) => {
-                const newNodes = new Set(nodes);
-                newNodes.add(nodeId);
-                return newNodes;
-            });
-        }
+$effect(() => {
+  // Default expand level
+  if (level < defaultExpandLevel && hasChildren && !isExpanded) {
+    expandedNodesStore.update((nodes) => {
+      const newNodes = new Set(nodes);
+      newNodes.add(nodeId);
+      return newNodes;
     });
+  }
+});
 
-    $effect(() => {
-        // Auto-expand to selected node
-        if (
-            $selectedNodeStore &&
-            isNodeOrAncestor($selectedNodeStore, node) &&
-            hasChildren
-        ) {
-            expandedNodesStore.update((nodes) => {
-                const newNodes = new Set(nodes);
-                newNodes.add(nodeId);
-                return newNodes;
-            });
-        }
+$effect(() => {
+  // Auto-expand to selected node
+  if ($selectedNodeStore && isNodeOrAncestor($selectedNodeStore, node) && hasChildren) {
+    expandedNodesStore.update((nodes) => {
+      const newNodes = new Set(nodes);
+      newNodes.add(nodeId);
+      return newNodes;
     });
+  }
+});
 
-    function isNodeOrAncestor(selected: ASTNode, current: ASTNode): boolean {
-        // Check if selected node is current node
-        if (selected.pos === current.pos && selected.end === current.end) {
-            return true;
-        }
+function isNodeOrAncestor(selected: ASTNode, current: ASTNode): boolean {
+  // Check if selected node is current node
+  if (selected.pos === current.pos && selected.end === current.end) {
+    return true;
+  }
 
-        // Check if selected node is descendant of current node
-        if (selected.pos >= current.pos && selected.end <= current.end) {
-            return true;
-        }
+  // Check if selected node is descendant of current node
+  if (selected.pos >= current.pos && selected.end <= current.end) {
+    return true;
+  }
 
-        return false;
-    }
+  return false;
+}
 
-    $effect(() => {
-        if (isSelected && nodeElement) {
-            nodeElement.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest",
-            });
-        }
+$effect(() => {
+  if (isSelected && nodeElement) {
+    nodeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
     });
+  }
+});
 </script>
 
 <div

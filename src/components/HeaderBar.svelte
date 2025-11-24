@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { APP_NAME } from "$lib/utils/constants";
+import { APP_NAME } from '$lib/utils/constants';
 
-    const VERSION = "0.1.0";
-    const REPOSITORY_URL = "https://github.com/handlename/go-ast-inspector";
-    const AUTHOR_URL = "https://github.com/handlename";
+const VERSION = '0.1.0';
+const REPOSITORY_URL = 'https://github.com/handlename/go-ast-inspector';
+const AUTHOR_URL = 'https://github.com/handlename';
 </script>
 
 <header class="header-bar" role="banner">

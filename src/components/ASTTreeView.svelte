@@ -1,31 +1,27 @@
 <script lang="ts">
-    import type { ASTNode } from "$lib/core/types";
-    import { astStore, expandedNodesStore } from "$lib/stores/ast-store";
-    import { DEFAULT_EXPAND_LEVEL } from "$lib/utils/constants";
-    import TreeNode from "./TreeNode.svelte";
+import type { ASTNode } from '$lib/core/types';
+import { astStore, expandedNodesStore } from '$lib/stores/ast-store';
+import { DEFAULT_EXPAND_LEVEL } from '$lib/utils/constants';
+import TreeNode from './TreeNode.svelte';
 
-    function expandAll() {
-        if (!$astStore) return;
+function expandAll() {
+  if (!$astStore) return;
 
-        const allNodeIds = new Set<string>();
-        collectNodeIds($astStore, allNodeIds);
-        expandedNodesStore.set(allNodeIds);
-    }
+  const allNodeIds = new Set<string>();
+  collectNodeIds($astStore, allNodeIds);
+  expandedNodesStore.set(allNodeIds);
+}
 
-    function collapseAll() {
-        expandedNodesStore.set(new Set());
-    }
+function collapseAll() {
+  expandedNodesStore.set(new Set());
+}
 
-    function collectNodeIds(
-        node: ASTNode,
-        ids: Set<string>,
-        prefix = "0",
-    ): void {
-        ids.add(prefix);
-        node.children.forEach((child, index) => {
-            collectNodeIds(child, ids, `${prefix}-${index}`);
-        });
-    }
+function collectNodeIds(node: ASTNode, ids: Set<string>, prefix = '0'): void {
+  ids.add(prefix);
+  node.children.forEach((child, index) => {
+    collectNodeIds(child, ids, `${prefix}-${index}`);
+  });
+}
 </script>
 
 <div class="ast-tree-view">

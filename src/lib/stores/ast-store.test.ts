@@ -1,15 +1,15 @@
-import { get } from "svelte/store";
-import { describe, it, expect, beforeEach } from "vitest";
+import { get } from 'svelte/store';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   astStore,
   parseErrorStore,
   selectedNodeStore,
   expandedNodesStore,
   highlightedRangeStore,
-} from "./ast-store";
-import type { ASTNode, ParseError } from "$lib/core/types";
+} from './ast-store';
+import type { ASTNode, ParseError } from '$lib/core/types';
 
-describe("ast-store", () => {
+describe('ast-store', () => {
   beforeEach(() => {
     // Reset stores before each test
     astStore.set(null);
@@ -19,15 +19,15 @@ describe("ast-store", () => {
     highlightedRangeStore.set(null);
   });
 
-  describe("astStore", () => {
-    it("should initialize with null", () => {
+  describe('astStore', () => {
+    it('should initialize with null', () => {
       expect(get(astStore)).toBe(null);
     });
 
-    it("should update AST node", () => {
+    it('should update AST node', () => {
       const mockAst: ASTNode = {
-        id: "test-1",
-        type: "File",
+        id: 'test-1',
+        type: 'File',
         pos: 1,
         end: 100,
         children: [],
@@ -37,10 +37,10 @@ describe("ast-store", () => {
       expect(get(astStore)).toEqual(mockAst);
     });
 
-    it("should clear AST node", () => {
+    it('should clear AST node', () => {
       const mockAst: ASTNode = {
-        id: "test-1",
-        type: "File",
+        id: 'test-1',
+        type: 'File',
         pos: 1,
         end: 100,
         children: [],
@@ -52,14 +52,14 @@ describe("ast-store", () => {
     });
   });
 
-  describe("parseErrorStore", () => {
-    it("should initialize with null", () => {
+  describe('parseErrorStore', () => {
+    it('should initialize with null', () => {
       expect(get(parseErrorStore)).toBe(null);
     });
 
-    it("should update parse error", () => {
+    it('should update parse error', () => {
       const mockError: ParseError = {
-        message: "syntax error",
+        message: 'syntax error',
         line: 5,
         column: 10,
       };
@@ -68,9 +68,9 @@ describe("ast-store", () => {
       expect(get(parseErrorStore)).toEqual(mockError);
     });
 
-    it("should clear parse error", () => {
+    it('should clear parse error', () => {
       const mockError: ParseError = {
-        message: "syntax error",
+        message: 'syntax error',
         line: 5,
         column: 10,
       };
@@ -81,31 +81,31 @@ describe("ast-store", () => {
     });
   });
 
-  describe("selectedNodeStore", () => {
-    it("should initialize with null", () => {
+  describe('selectedNodeStore', () => {
+    it('should initialize with null', () => {
       expect(get(selectedNodeStore)).toBe(null);
     });
 
-    it("should update selected node", () => {
+    it('should update selected node', () => {
       const mockNode: ASTNode = {
-        id: "test-node-1",
-        type: "Ident",
+        id: 'test-node-1',
+        type: 'Ident',
         pos: 10,
         end: 15,
-        value: "main",
+        value: 'main',
       };
 
       selectedNodeStore.set(mockNode);
       expect(get(selectedNodeStore)).toEqual(mockNode);
     });
 
-    it("should clear selected node", () => {
+    it('should clear selected node', () => {
       const mockNode: ASTNode = {
-        id: "test-node-1",
-        type: "Ident",
+        id: 'test-node-1',
+        type: 'Ident',
         pos: 10,
         end: 15,
-        value: "main",
+        value: 'main',
       };
 
       selectedNodeStore.set(mockNode);
@@ -114,29 +114,29 @@ describe("ast-store", () => {
     });
   });
 
-  describe("expandedNodesStore", () => {
-    it("should initialize with empty Set", () => {
+  describe('expandedNodesStore', () => {
+    it('should initialize with empty Set', () => {
       expect(get(expandedNodesStore)).toEqual(new Set());
     });
 
-    it("should add node IDs to expanded set", () => {
-      const nodeIds = new Set(["node-1", "node-2", "node-3"]);
+    it('should add node IDs to expanded set', () => {
+      const nodeIds = new Set(['node-1', 'node-2', 'node-3']);
       expandedNodesStore.set(nodeIds);
       expect(get(expandedNodesStore)).toEqual(nodeIds);
     });
 
-    it("should update expanded nodes set", () => {
-      const initialSet = new Set(["node-1"]);
+    it('should update expanded nodes set', () => {
+      const initialSet = new Set(['node-1']);
       expandedNodesStore.set(initialSet);
 
-      const updatedSet = new Set(["node-1", "node-2"]);
+      const updatedSet = new Set(['node-1', 'node-2']);
       expandedNodesStore.set(updatedSet);
 
       expect(get(expandedNodesStore)).toEqual(updatedSet);
     });
 
-    it("should clear expanded nodes", () => {
-      const nodeIds = new Set(["node-1", "node-2"]);
+    it('should clear expanded nodes', () => {
+      const nodeIds = new Set(['node-1', 'node-2']);
       expandedNodesStore.set(nodeIds);
 
       expandedNodesStore.set(new Set());
@@ -144,18 +144,18 @@ describe("ast-store", () => {
     });
   });
 
-  describe("highlightedRangeStore", () => {
-    it("should initialize with null", () => {
+  describe('highlightedRangeStore', () => {
+    it('should initialize with null', () => {
       expect(get(highlightedRangeStore)).toBe(null);
     });
 
-    it("should update highlighted range", () => {
+    it('should update highlighted range', () => {
       const range = { start: 10, end: 50 };
       highlightedRangeStore.set(range);
       expect(get(highlightedRangeStore)).toEqual(range);
     });
 
-    it("should clear highlighted range", () => {
+    it('should clear highlighted range', () => {
       const range = { start: 10, end: 50 };
       highlightedRangeStore.set(range);
 

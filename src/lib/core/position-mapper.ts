@@ -1,4 +1,4 @@
-import type { ASTNode, Position } from "./types";
+import type { ASTNode, Position } from './types';
 
 export class PositionMapper {
   private lineOffsets: number[] = [];
@@ -10,7 +10,7 @@ export class PositionMapper {
   private buildLineOffsets(sourceCode: string): void {
     this.lineOffsets = [0];
     for (let i = 0; i < sourceCode.length; i++) {
-      if (sourceCode[i] === "\n") {
+      if (sourceCode[i] === '\n') {
         this.lineOffsets.push(i + 1);
       }
     }

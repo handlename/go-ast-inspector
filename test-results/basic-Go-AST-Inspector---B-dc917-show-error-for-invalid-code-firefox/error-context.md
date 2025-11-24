@@ -1,0 +1,71 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "Go AST Inspector" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Visualize Go Abstract Syntax Tree
+      - generic [ref=e9]:
+        - generic [ref=e10]: v0.1.0
+        - link "GitHub Repository" [ref=e11] [cursor=pointer]:
+          - /url: https://github.com/handlename/go-ast-inspector
+          - text: Repository
+        - link "Author GitHub Profile" [ref=e12] [cursor=pointer]:
+          - /url: https://github.com/handlename
+          - text: "@handlename"
+  - main [ref=e13]:
+    - generic [ref=e15]:
+      - heading "Go Source Code" [level=2] [ref=e17]
+      - generic [ref=e18]:
+        - generic:
+          - generic:
+            - code: "package main import \"fmt\" func main() { fmt.Println(\"Hello, World!\") }"
+        - textbox "Go Source Code" [ref=e19]:
+          - /placeholder: Enter Go source code here...
+          - text: "package main import \"fmt\" func main() { fmt.Println(\"Hello, World!\") }"
+    - separator "Resize panels" [ref=e20]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - heading "AST Tree" [level=2] [ref=e24]
+        - generic [ref=e25]:
+          - button "Expand all tree nodes" [ref=e26] [cursor=pointer]: Expand All
+          - button "Collapse all tree nodes" [ref=e27] [cursor=pointer]: Collapse All
+      - tree "AST Tree" [ref=e28]:
+        - treeitem "Collapse File (name=\"main\") [1:74] Collapse GenDecl (tok=\"import\") [15:27] ImportSpec (path=\"\\\"fmt\\\"\") [22:27] Collapse FuncDecl (name=\"main\") [29:74] Expand FuncType [29:40] Expand BlockStmt [41:74]" [expanded] [level=1] [ref=e29]:
+          - generic [ref=e30] [cursor=pointer]:
+            - button "Collapse" [ref=e31]: ▼
+            - generic [ref=e32]: File
+            - generic [ref=e33]: (name="main")
+            - generic [ref=e34]: "[1:74]"
+          - generic [ref=e35]:
+            - treeitem "Collapse GenDecl (tok=\"import\") [15:27] ImportSpec (path=\"\\\"fmt\\\"\") [22:27]" [expanded] [level=2] [ref=e36]:
+              - generic [ref=e37] [cursor=pointer]:
+                - button "Collapse" [ref=e38]: ▼
+                - generic [ref=e39]: GenDecl
+                - generic [ref=e40]: (tok="import")
+                - generic [ref=e41]: "[15:27]"
+              - treeitem "ImportSpec (path=\"\\\"fmt\\\"\") [22:27]" [level=3] [ref=e43]:
+                - generic [ref=e44] [cursor=pointer]:
+                  - generic [ref=e45]: ImportSpec
+                  - generic [ref=e46]: (path="\"fmt\"")
+                  - generic [ref=e47]: "[22:27]"
+            - treeitem "Collapse FuncDecl (name=\"main\") [29:74] Expand FuncType [29:40] Expand BlockStmt [41:74]" [expanded] [level=2] [ref=e48]:
+              - generic [ref=e49] [cursor=pointer]:
+                - button "Collapse" [ref=e50]: ▼
+                - generic [ref=e51]: FuncDecl
+                - generic [ref=e52]: (name="main")
+                - generic [ref=e53]: "[29:74]"
+              - generic [ref=e54]:
+                - treeitem "Expand FuncType [29:40]" [level=3] [ref=e55]:
+                  - generic [ref=e56] [cursor=pointer]:
+                    - button "Expand" [ref=e57]: ▶
+                    - generic [ref=e58]: FuncType
+                    - generic [ref=e59]: "[29:40]"
+                - treeitem "Expand BlockStmt [41:74]" [level=3] [ref=e60]:
+                  - generic [ref=e61] [cursor=pointer]:
+                    - button "Expand" [ref=e62]: ▶
+                    - generic [ref=e63]: BlockStmt
+                    - generic [ref=e64]: "[41:74]"
+```
