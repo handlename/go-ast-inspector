@@ -89,13 +89,18 @@
 
     const highlightedCode = $derived(highlightSyntax($sourceCodeStore));
 
-    // ASTツリーからの選択を監視してハイライト範囲を設定
+    // ASTツリーからの選択を監視してハイライト範囲を設定し、エディタをスクロール
     $effect(() => {
         if ($selectedNodeStore) {
             highlightedRangeStore.set({
                 start: $selectedNodeStore.pos,
                 end: $selectedNodeStore.end,
             });
+
+            // Scroll editor to the selected node position
+            if (textareaElement) {
+                scrollToPosition($selectedNodeStore.pos);
+            }
         } else {
             highlightedRangeStore.set(null);
         }
@@ -302,6 +307,42 @@
         syntaxLayerElement.scrollLeft = scrollLeft;
         highlightLayerElement.scrollTop = scrollTop;
         highlightLayerElement.scrollLeft = scrollLeft;
+    }
+
+    function scrollToPosition(astPosition: number) {
+        if (!textareaElement) return;
+
+        const text = $sourceCodeStore;
+        const offset = Math.max(0, astPosition - 1); // AST positions are 1-based
+
+        // Calculate line number and column
+        const lines = text.split("\n");
+        let currentOffset = 0;
+        let targetLine = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            const lineLength = lines[i].length + 1; // +1 for newline
+            if (currentOffset + lineLength > offset) {
+                targetLine = i;
+                break;
+            }
+            currentOffset += lineLength;
+        }
+
+        // Calculate scroll position
+        const lineHeight = 1.5 * 14; // 1.5 * 0.875rem (assuming 16px base)
+        const padding = 16; // 1rem
+        const targetScrollTop = targetLine * lineHeight;
+
+        // Scroll to position with some margin
+        const editorHeight = textareaElement.clientHeight;
+        const scrollTop = Math.max(0, targetScrollTop - editorHeight / 3);
+
+        textareaElement.scrollTop = scrollTop;
+
+        // Synchronize other layers
+        if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
+        if (highlightLayerElement) highlightLayerElement.scrollTop = scrollTop;
     }
 </script>
 
