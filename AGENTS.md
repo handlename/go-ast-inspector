@@ -1,130 +1,130 @@
 # Go AST Inspector - AI Agent Instructions
 
-このファイルは、AIエージェント（Claude Code等）がこのプロジェクトで作業する際に参照すべき重要な情報を記載しています。
+This file contains important information that AI agents (such as Claude Code) should reference when working on this project.
 
 ---
 
-## プロジェクト概要
+## Project Overview
 
-**Go AST Inspector** は、Go言語のソースコードから抽象構文木(AST)を取得し、ブラウザ上で直感的に可視化するスタンドアローンツールです。
+**Go AST Inspector** is a standalone tool that extracts Abstract Syntax Trees (AST) from Go language source code and visualizes them intuitively in a browser.
 
-- **提供形態**: 単一HTMLファイルとして配布可能
-- **主要技術**: TypeScript, Svelte 5.x, Go WebAssembly, Vite
-- **対象ユーザー**: Go言語実務開発者
+- **Distribution Format**: Distributable as a single HTML file
+- **Key Technologies**: TypeScript, Svelte 5.x, Go WebAssembly, Vite
+- **Target Users**: Professional Go language developers
 
 ---
 
-## 重要なドキュメント
+## Important Documents
 
-プロジェクトの作業を行う前に、以下のドキュメントを必ず参照してください:
+Before working on the project, please refer to the following documents:
 
 ### 1. [REQUIREMENTS.md](./REQUIREMENTS.md)
-- **内容**: プロジェクトの要件定義書
-- **参照タイミング**: プロジェクト全体の理解が必要な時、機能要件を確認する時
-- **重要セクション**:
-  - 機能要件（FR-001〜FR-006）
-  - 非機能要件（NFR-001〜NFR-006）
-  - 技術選定決定事項
-  - MVP範囲の定義
+- **Contents**: Project requirements specification
+- **Reference Timing**: When understanding the overall project, when checking functional requirements
+- **Key Sections**:
+  - Functional Requirements (FR-001 to FR-006)
+  - Non-functional Requirements (NFR-001 to NFR-006)
+  - Technology Selection Decisions
+  - MVP Scope Definition
 
 ### 2. [DESIGN.md](./DESIGN.md)
-- **内容**: 技術設計書
-- **参照タイミング**: 実装を開始する前、アーキテクチャを理解する時
-- **重要セクション**:
-  - 技術スタック
-  - アーキテクチャ設計（3層構造）
-  - モジュール設計とディレクトリ構成
-  - Svelteコンポーネント設計
-  - ビルド設定（Vite, TypeScript, Biome, Svelte）
-  - データフロー設計
+- **Contents**: Technical design document
+- **Reference Timing**: Before starting implementation, when understanding architecture
+- **Key Sections**:
+  - Technology Stack
+  - Architecture Design (3-layer structure)
+  - Module Design and Directory Structure
+  - Svelte Component Design
+  - Build Configuration (Vite, TypeScript, Biome, Svelte)
+  - Data Flow Design
 
 ### 3. [TASKS.md](./TASKS.md)
-- **内容**: タスク定義書
-- **参照タイミング**: 実装タスクを実行する時
-- **重要セクション**:
-  - フェーズ1〜8のタスク定義
-  - 各タスクの目的・詳細・完了条件
-  - タスク実行の推奨順序
+- **Contents**: Task definition document
+- **Reference Timing**: When executing implementation tasks
+- **Key Sections**:
+  - Task definitions for Phases 1-8
+  - Purpose, details, and completion criteria for each task
+  - Recommended task execution order
 
 ---
 
-## 作業を開始する前に
+## Before Starting Work
 
-### 必須確認事項
+### Required Checks
 
-1. **REQUIREMENTS.mdを読む**
-   - プロジェクトの目的と要件を理解する
-   - MVP範囲（FR-001〜FR-006）を確認する
-   - 技術選定（Svelte 5.x, TypeScript, WebAssembly）を理解する
+1. **Read REQUIREMENTS.md**
+   - Understand project objectives and requirements
+   - Check MVP scope (FR-001 to FR-006)
+   - Understand technology selections (Svelte 5.x, TypeScript, WebAssembly)
 
-2. **DESIGN.mdを読む**
-   - アーキテクチャ（WebAssembly Layer, Application Logic Layer, UI Layer）を理解する
-   - ディレクトリ構成を確認する
-   - Svelte Storeを使った状態管理設計を理解する
+2. **Read DESIGN.md**
+   - Understand architecture (WebAssembly Layer, Application Logic Layer, UI Layer)
+   - Check directory structure
+   - Understand state management design using Svelte Store
 
-3. **TASKS.mdで現在のフェーズを確認する**
-   - 実行すべきタスクを特定する
-   - タスクの依存関係を確認する
+3. **Check current phase in TASKS.md**
+   - Identify tasks to execute
+   - Check task dependencies
 
-### 推奨される作業フロー
+### Recommended Workflow
 
 ```
-1. REQUIREMENTS.md → プロジェクト理解
-2. DESIGN.md → アーキテクチャ・技術仕様理解
-3. TASKS.md → 実装タスクの確認
-4. 実装 → 設計に従って実装
-5. 完了条件の確認 → TASKS.mdの完了条件をチェック
+1. REQUIREMENTS.md → Project Understanding
+2. DESIGN.md → Architecture and Technical Specification Understanding
+3. TASKS.md → Implementation Task Confirmation
+4. Implementation → Implement according to design
+5. Completion Criteria Check → Check TASKS.md completion criteria
 ```
 
 ---
 
-## 技術スタックの要点
+## Technology Stack Highlights
 
-### フロントエンド
-- **言語**: TypeScript 5.x (strict mode)
-- **UIフレームワーク**: Svelte 5.x (runes mode有効)
-- **ビルドツール**: Vite 5.x
+### Frontend
+- **Language**: TypeScript 5.x (strict mode)
+- **UI Framework**: Svelte 5.x (runes mode enabled)
+- **Build Tool**: Vite 5.x
 - **Linter/Formatter**: Biome 1.x
-- **UI言語**: 英語のみ
+- **UI Language**: English only
 
-### バックエンド（WebAssembly）
-- **言語**: Go 1.21+
-- **パッケージ**: go/ast, go/parser, go/token
+### Backend (WebAssembly)
+- **Language**: Go 1.21+
+- **Packages**: go/ast, go/parser, go/token
 
-### 状態管理
-- **方式**: Svelte Writable Store
-- **主要Store**:
-  - `astStore`: AST状態
-  - `parseErrorStore`: パースエラー
-  - `selectedNodeStore`: 選択されたノード
-  - `expandedNodesStore`: 展開されたノード
+### State Management
+- **Method**: Svelte Writable Store
+- **Main Stores**:
+  - `astStore`: AST state
+  - `parseErrorStore`: Parse errors
+  - `selectedNodeStore`: Selected node
+  - `expandedNodesStore`: Expanded nodes
 
 ---
 
-## コーディング規約
+## Coding Conventions
 
 ### TypeScript
-- strict modeを有効化
-- 型定義を明示的に記述
-- マジックナンバーを避け、定数を使用
+- Enable strict mode
+- Explicitly write type definitions
+- Avoid magic numbers, use constants
 
 ### Svelte
-- Svelte 5のrunes mode (`$state`, `$derived`, `$effect`) を使用
-- コンポーネントは単一責任の原則に従う
-- propsの型を明示
+- Use Svelte 5 runes mode (`$state`, `$derived`, `$effect`)
+- Components follow single responsibility principle
+- Explicitly type props
 
-### スタイリング
-- BEM命名規則を推奨
-- グローバルスタイルは `src/styles/global.css`
-- コンポーネント固有スタイルは `<style>` セクション
+### Styling
+- BEM naming convention recommended
+- Global styles in `src/styles/global.css`
+- Component-specific styles in `<style>` section
 
-### コメント
-- MUST規約: 冗長なコメントは禁止（単純な処理への説明不要）
-- SHOULD規約: コードの意図が伝わりにくい箇所にはコメントを記述
+### Comments
+- MUST convention: Prohibit redundant comments (no explanation needed for simple operations)
+- SHOULD convention: Write comments where code intent is hard to convey
 
 ### Commit
-- MUST規約: すべてのcommitにGPGサインを付与
-- MUST規約: Co-Author として Claude を追加:
+- MUST convention: Add GPG sign to all commits
+- MUST convention: Add Claude as Co-Author:
   ```
   🤖 Generated with [Claude Code](https://claude.com/claude-code)
   
@@ -133,41 +133,41 @@
 
 ---
 
-## よくある質問
+## Frequently Asked Questions
 
-### Q: Vanilla JavaScriptではなくSvelteを使う理由は？
-A: バンドルサイズの最小化、リアクティブな状態管理、保守性の向上のため。DESIGN.mdの「不採用技術と理由」を参照。
+### Q: Why use Svelte instead of Vanilla JavaScript?
+A: For bundle size minimization, reactive state management, and maintainability. See "Rejected Technologies and Reasons" in DESIGN.md.
 
-### Q: WebAssemblyはどこで使われる？
-A: Go言語のAST解析のみ。go/parserを使ってソースコードをASTに変換します。
+### Q: Where is WebAssembly used?
+A: Only for Go language AST analysis. Use go/parser to convert source code to AST.
 
-### Q: 単一HTMLファイルにどうやって埋め込む？
-A: Viteのvite-plugin-singlefileを使用。すべてのJS/CSS/WASMバイナリをインライン化します。
+### Q: How is it embedded in a single HTML file?
+A: Using Vite's vite-plugin-singlefile. All JS/CSS/WASM binaries are inlined.
 
-### Q: テストは必須？
-A: TASKS.mdではフェーズ7（推奨）。MVPには含まれないが、品質保証のため推奨。
-
----
-
-## トラブルシューティング
-
-### ドキュメント間の矛盾を発見した場合
-1. REQUIREMENTS.md > DESIGN.md > TASKS.md の順で優先度が高い
-2. 矛盾をユーザーに報告し、確認を求める
-
-### 不明な仕様がある場合
-1. まずREQUIREMENTS.mdとDESIGN.mdを確認
-2. 記載がない場合はユーザーに質問
-3. 独自判断で実装しない
-
-### ビルドエラーが発生した場合
-1. DESIGN.mdのビルド設定を確認
-2. package.jsonの依存関係を確認
-3. エラーメッセージを詳細に分析
+### Q: Are tests mandatory?
+A: Phase 7 (Recommended) in TASKS.md. Not included in MVP, but recommended for quality assurance.
 
 ---
 
-## 関連リンク
+## Troubleshooting
+
+### If you find contradictions between documents
+1. Priority order: REQUIREMENTS.md > DESIGN.md > TASKS.md
+2. Report contradictions to user and request confirmation
+
+### If there are unclear specifications
+1. First check REQUIREMENTS.md and DESIGN.md
+2. Ask user if not documented
+3. Do not implement based on independent judgment
+
+### If build errors occur
+1. Check build configuration in DESIGN.md
+2. Check package.json dependencies
+3. Analyze error messages in detail
+
+---
+
+## Related Links
 
 - [Svelte Documentation](https://svelte.dev/)
 - [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
@@ -177,5 +177,5 @@ A: TASKS.mdではフェーズ7（推奨）。MVPには含まれないが、品�
 
 ---
 
-**最終更新日**: 2025-11-23  
-**バージョン**: 1.0
+**Last Updated**: 2025-11-23  
+**Version**: 1.0

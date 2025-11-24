@@ -1,633 +1,633 @@
-# Go AST Inspector - タスク定義書
+# Go AST Inspector - Task Definition Document
 
-## 文書情報
+## Document Information
 
-**バージョン**: 1.0  
-**作成日**: 2025-11-23  
-**関連文書**: [REQUIREMENTS.md](./REQUIREMENTS.md), [DESIGN.md](./DESIGN.md)
-
----
-
-## タスク概要
-
-本文書は、Go AST Inspectorの実装に必要なタスクを段階的に定義する。各フェーズは論理的な依存関係に基づいて整理され、MVP（最小機能プロダクト）の完成を目指す。
-
-### MVP範囲
-- FR-001〜FR-006すべて必須
-- ツリー表示とホバー表示の実装は最優先
+**Version**: 1.0  
+**Created**: 2025-11-23  
+**Related Documents**: [REQUIREMENTS.md](./REQUIREMENTS.md), [DESIGN.md](./DESIGN.md)
 
 ---
 
-## フェーズ1: プロジェクトセットアップ
+## Task Overview
 
-### 1-1. プロジェクト初期化
+This document defines the tasks required for implementing Go AST Inspector in a phased manner. Each phase is organized based on logical dependencies, aiming for MVP (Minimum Viable Product) completion.
 
-- [x] プロジェクト初期化
-  - 目的: 開発環境とビルドシステムの基盤を構築する
-  - 詳細:
-    - `npm init`でpackage.jsonを作成
-    - 必要な依存関係をインストール（Svelte, Vite, TypeScript, Biome）
-    - gitignoreの設定
-  - 完了条件:
-    - [x] package.jsonが作成されている
-    - [x] node_modulesがインストールされている
-    - [x] .gitignoreが適切に設定されている
-
-- [x] TypeScript設定
-  - 目的: TypeScriptコンパイラの設定を行う
-  - 詳細:
-    - tsconfig.jsonを作成
-    - Svelte用の型定義を追加
-    - strict modeを有効化
-  - 完了条件:
-    - [x] tsconfig.jsonが存在し、DESIGN.mdの仕様に従っている
-    - [x] `tsc --noEmit`がエラーなく実行できる
-
-- [x] Vite設定
-  - 目的: ビルドツールとSvelteプラグインの設定を行う
-  - 詳細:
-    - vite.config.tsを作成
-    - @sveltejs/vite-plugin-svelteを設定
-    - vite-plugin-singlefileを設定
-    - パスエイリアス（$lib）を設定
-  - 完了条件:
-    - [x] vite.config.tsが存在し、DESIGN.mdの仕様に従っている
-    - [x] `npm run dev`で開発サーバーが起動する
-
-- [x] Svelte設定
-  - 目的: Svelteコンパイラの設定を行う
-  - 詳細:
-    - svelte.config.jsを作成
-    - vitePreprocessを設定
-    - ルーンモード（runes: true）を有効化
-  - 完了条件:
-    - [x] svelte.config.jsが存在し、DESIGN.mdの仕様に従っている
-    - [x] Svelteファイルが正しくコンパイルされる
-
-- [x] Biome設定
-  - 目的: LinterとFormatterの設定を行う
-  - 詳細:
-    - biome.jsonを作成
-    - 推奨ルールを適用
-    - TypeScript/Svelte対応を設定
-  - 完了条件:
-    - [x] biome.jsonが存在し、DESIGN.mdの仕様に従っている
-    - [x] `npm run lint`がエラーなく実行できる
+### MVP Scope
+- FR-001 to FR-006 are all mandatory
+- Tree display and hover display implementation are top priorities
 
 ---
 
-## フェーズ2: Go WebAssembly パーサー実装
+## Phase 1: Project Setup
 
-### 2-1. Go WASM開発環境構築
+### 1-1. Project Initialization
 
-- [x] WASM開発環境構築
-  - 目的: Go WebAssemblyのビルド環境を整備する
-  - 詳細:
-    - src/wasmディレクトリを作成
-    - go.modを初期化
-    - build.shスクリプトを作成
-    - wasm_exec.jsのコピースクリプトを追加
-  - 完了条件:
-    - [x] src/wasm/build.shが実行可能
-    - [x] `npm run build:wasm`が成功する
-    - [x] public/parser.wasmとpublic/wasm_exec.jsが生成される
+- [x] Project Initialization
+  - Purpose: Build the foundation for the development environment and build system
+  - Details:
+    - Create package.json with `npm init`
+    - Install required dependencies (Svelte, Vite, TypeScript, Biome)
+    - Configure gitignore
+  - Completion Criteria:
+    - [x] package.json is created
+    - [x] node_modules are installed
+    - [x] .gitignore is properly configured
 
-### 2-2. Goパーサー実装
+- [x] TypeScript Configuration
+  - Purpose: Configure the TypeScript compiler
+  - Details:
+    - Create tsconfig.json
+    - Add type definitions for Svelte
+    - Enable strict mode
+  - Completion Criteria:
+    - [x] tsconfig.json exists and follows DESIGN.md specifications
+    - [x] `tsc --noEmit` runs without errors
 
-- [x] 基本的なASTパーサー実装
-  - 目的: Go言語のソースコードをASTに変換する機能を実装する
-  - 詳細:
-    - src/wasm/parser.goを作成
-    - go/parser、go/astを使用してパース処理を実装
-    - エラーハンドリングを実装
-    - JavaScript呼び出し可能な関数をエクスポート
-  - 完了条件:
-    - [x] 有効なGo言語コードをASTに変換できる
-    - [x] 構文エラー時に行番号・列番号を含むエラー情報を返す
-    - [x] JavaScriptから呼び出し可能
+- [x] Vite Configuration
+  - Purpose: Configure build tool and Svelte plugin
+  - Details:
+    - Create vite.config.ts
+    - Configure @sveltejs/vite-plugin-svelte
+    - Configure vite-plugin-singlefile
+    - Set up path alias ($lib)
+  - Completion Criteria:
+    - [x] vite.config.ts exists and follows DESIGN.md specifications
+    - [x] Dev server starts with `npm run dev`
 
-- [x] ASTのJSON変換実装
-  - 目的: GoのAST構造をJavaScriptで扱えるJSON形式に変換する
-  - 詳細:
-    - AST構造をJSONにシリアライズする関数を実装
-    - ノードタイプ、位置情報、メタデータを含める
-    - 子ノードの階層構造を保持
-  - 完了条件:
-    - [x] ASTが適切なJSON形式で出力される
-    - [x] すべての主要なノードタイプが変換される
-    - [x] 位置情報（pos, end）が正しく含まれる
+- [x] Svelte Configuration
+  - Purpose: Configure the Svelte compiler
+  - Details:
+    - Create svelte.config.js
+    - Configure vitePreprocess
+    - Enable runes mode (runes: true)
+  - Completion Criteria:
+    - [x] svelte.config.js exists and follows DESIGN.md specifications
+    - [x] Svelte files compile correctly
 
-### 2-3. WASM統合
-
-- [x] WASM初期化処理実装
-  - 目的: ブラウザでWASMを読み込み初期化する
-  - 詳細:
-    - src/lib/core/parser-bridge.tsを作成
-    - WebAssembly.instantiateを使用してWASMロード
-    - wasm_exec.jsの統合
-    - 初期化完了フラグの管理
-  - 完了条件:
-    - [x] WASMが正常にロードされる
-    - [x] 初期化完了を検知できる
-    - [x] エラーハンドリングが適切
-
-- [x] パーサーブリッジ実装
-  - 目的: TypeScriptからWASMパーサーを呼び出すインターフェースを実装する
-  - 詳細:
-    - ParserBridgeクラスを実装
-    - parse(sourceCode: string)メソッドを実装
-    - エラーレスポンスと成功レスポンスの型定義
-    - Promise-basedなAPI設計
-  - 完了条件:
-    - [x] TypeScriptからパーサーを呼び出せる
-    - [x] 成功時にASTノードが返される
-    - [x] エラー時にエラー情報が返される
+- [x] Biome Configuration
+  - Purpose: Configure Linter and Formatter
+  - Details:
+    - Create biome.json
+    - Apply recommended rules
+    - Configure TypeScript/Svelte support
+  - Completion Criteria:
+    - [x] biome.json exists and follows DESIGN.md specifications
+    - [x] `npm run lint` runs without errors
 
 ---
 
-## フェーズ3: 状態管理とコアロジック実装
+## Phase 2: Go WebAssembly Parser Implementation
 
-### 3-1. Svelte Store実装
+### 2-1. Go WASM Development Environment Setup
 
-- [x] AST状態管理Store実装
-  - 目的: AST関連の状態を管理するSvelte Storeを実装する
-  - 詳細:
-    - src/lib/stores/ast-store.tsを作成
-    - astStore（現在のAST）を実装
-    - parseErrorStore（パースエラー）を実装
-    - selectedNodeStore（選択されたノード）を実装
-    - expandedNodesStore（展開されたノードID）を実装
-  - 完了条件:
-    - [x] すべてのStoreが型定義されている
-    - [x] Storeの購読と更新が機能する
-    - [x] 型安全性が保証されている
+- [x] WASM Development Environment Setup
+  - Purpose: Set up Go WebAssembly build environment
+  - Details:
+    - Create src/wasm directory
+    - Initialize go.mod
+    - Create build.sh script
+    - Add wasm_exec.js copy script
+  - Completion Criteria:
+    - [x] src/wasm/build.sh is executable
+    - [x] `npm run build:wasm` succeeds
+    - [x] public/parser.wasm and public/wasm_exec.js are generated
 
-- [x] エディタ状態管理Store実装
-  - 目的: コードエディタの状態を管理するSvelte Storeを実装する
-  - 詳細:
-    - src/lib/stores/editor-store.tsを作成
-    - ソースコード状態の管理
-    - ハイライト範囲の管理
-    - カーソル位置の管理
-  - 完了条件:
-    - [x] エディタ状態がStoreで管理されている
-    - [x] リアクティブに状態が更新される
+### 2-2. Go Parser Implementation
 
-### 3-2. 位置マッピング実装
+- [x] Basic AST Parser Implementation
+  - Purpose: Implement functionality to convert Go source code to AST
+  - Details:
+    - Create src/wasm/parser.go
+    - Implement parsing logic using go/parser and go/ast
+    - Implement error handling
+    - Export JavaScript-callable functions
+  - Completion Criteria:
+    - [x] Can convert valid Go code to AST
+    - [x] Returns error information including line and column numbers on syntax errors
+    - [x] Callable from JavaScript
 
-- [x] PositionMapper実装
-  - 目的: ソースコード位置とASTノードの対応関係を管理する
-  - 詳細:
-    - src/lib/core/position-mapper.tsを作成
-    - バイトオフセット → 行・列変換
-    - 行・列 → バイトオフセット変換
-    - 位置からASTノード検索
-  - 完了条件:
-    - [x] 位置変換が正確に機能する
-    - [x] 指定位置のASTノードを取得できる
-    - [x] 日本語コメントを含むコードでも正しく動作する
+- [x] AST JSON Conversion Implementation
+  - Purpose: Convert Go AST structure to JSON format usable in JavaScript
+  - Details:
+    - Implement function to serialize AST structure to JSON
+    - Include node type, position information, and metadata
+    - Preserve hierarchical structure of child nodes
+  - Completion Criteria:
+    - [x] AST is output in appropriate JSON format
+    - [x] All major node types are converted
+    - [x] Position information (pos, end) is correctly included
 
-### 3-3. 型定義とユーティリティ
+### 2-3. WASM Integration
 
-- [x] 共通型定義
-  - 目的: プロジェクト全体で使用する型を定義する
-  - 詳細:
-    - src/lib/core/types.tsを作成
-    - ASTNode型の定義
-    - ParseResult型の定義
-    - その他の共通型
-  - 完了条件:
-    - [x] すべての型がエクスポートされている
-    - [x] 型の整合性が保たれている
+- [x] WASM Initialization Process Implementation
+  - Purpose: Load and initialize WASM in the browser
+  - Details:
+    - Create src/lib/core/parser-bridge.ts
+    - Load WASM using WebAssembly.instantiate
+    - Integrate wasm_exec.js
+    - Manage initialization completion flag
+  - Completion Criteria:
+    - [x] WASM loads successfully
+    - [x] Can detect initialization completion
+    - [x] Error handling is appropriate
 
-- [x] 定数定義
-  - 目的: プロジェクト全体で使用する定数を定義する
-  - 詳細:
-    - src/lib/utils/constants.tsを作成
-    - デフォルト展開レベル
-    - デバウンス時間
-    - その他の定数
-  - 完了条件:
-    - [x] 定数が適切に定義されている
-    - [x] マジックナンバーが排除されている
+- [x] Parser Bridge Implementation
+  - Purpose: Implement interface to call WASM parser from TypeScript
+  - Details:
+    - Implement ParserBridge class
+    - Implement parse(sourceCode: string) method
+    - Define error and success response types
+    - Design Promise-based API
+  - Completion Criteria:
+    - [x] Can call parser from TypeScript
+    - [x] AST nodes are returned on success
+    - [x] Error information is returned on error
 
 ---
 
-## フェーズ4: Svelteコンポーネント実装
+## Phase 3: State Management and Core Logic Implementation
 
-### 4-1. 基本コンポーネント実装
+### 3-1. Svelte Store Implementation
 
-- [x] App.svelteルートコンポーネント実装
-  - 目的: アプリケーション全体のレイアウトを実装する
-  - 詳細:
-    - src/App.svelteを作成
-    - ヘッダー、メインコンテンツ、ステータスバーのレイアウト
-    - グローバルスタイルの適用
-    - WASM初期化処理の呼び出し
-  - 完了条件:
-    - [x] レイアウトが適切に表示される
-    - [x] WASM初期化が完了する
-    - [x] 英語UIが適用されている
+- [x] AST State Management Store Implementation
+  - Purpose: Implement Svelte Store to manage AST-related state
+  - Details:
+    - Create src/lib/stores/ast-store.ts
+    - Implement astStore (current AST)
+    - Implement parseErrorStore (parse errors)
+    - Implement selectedNodeStore (selected node)
+    - Implement expandedNodesStore (expanded node IDs)
+  - Completion Criteria:
+    - [x] All Stores are type-defined
+    - [x] Store subscription and updates function
+    - [x] Type safety is guaranteed
 
-- [x] HeaderBar.svelte実装
-  - 目的: ヘッダーバーとコントロールボタンを実装する
-  - 詳細:
-    - src/components/HeaderBar.svelteを作成
-    - Parse Button（手動パース）
+- [x] Editor State Management Store Implementation
+  - Purpose: Implement Svelte Store to manage code editor state
+  - Details:
+    - Create src/lib/stores/editor-store.ts
+    - Manage source code state
+    - Manage highlight range
+    - Manage cursor position
+  - Completion Criteria:
+    - [x] Editor state is managed by Store
+    - [x] State updates reactively
+
+### 3-2. Position Mapping Implementation
+
+- [x] PositionMapper Implementation
+  - Purpose: Manage correspondence between source code positions and AST nodes
+  - Details:
+    - Create src/lib/core/position-mapper.ts
+    - Byte offset → line/column conversion
+    - Line/column → byte offset conversion
+    - AST node search from position
+  - Completion Criteria:
+    - [x] Position conversion functions accurately
+    - [x] Can retrieve AST node at specified position
+    - [x] Works correctly with code containing Japanese comments
+
+### 3-3. Type Definitions and Utilities
+
+- [x] Common Type Definitions
+  - Purpose: Define types used throughout the project
+  - Details:
+    - Create src/lib/core/types.ts
+    - Define ASTNode type
+    - Define ParseResult type
+    - Other common types
+  - Completion Criteria:
+    - [x] All types are exported
+    - [x] Type consistency is maintained
+
+- [x] Constant Definitions
+  - Purpose: Define constants used throughout the project
+  - Details:
+    - Create src/lib/utils/constants.ts
+    - Default expansion level
+    - Debounce time
+    - Other constants
+  - Completion Criteria:
+    - [x] Constants are properly defined
+    - [x] Magic numbers are eliminated
+
+---
+
+## Phase 4: Svelte Component Implementation
+
+### 4-1. Basic Component Implementation
+
+- [x] App.svelte Root Component Implementation
+  - Purpose: Implement overall application layout
+  - Details:
+    - Create src/App.svelte
+    - Layout for header, main content, status bar
+    - Apply global styles
+    - Call WASM initialization process
+  - Completion Criteria:
+    - [x] Layout displays properly
+    - [x] WASM initialization completes
+    - [x] English UI is applied
+
+- [x] HeaderBar.svelte Implementation
+  - Purpose: Implement header bar and control buttons
+  - Details:
+    - Create src/components/HeaderBar.svelte
+    - Parse Button (manual parse)
     - Expand All Button
     - Collapse All Button
-  - 完了条件:
-    - [x] すべてのボタンが表示される
-    - [x] ボタンクリックで適切な処理が実行される
+  - Completion Criteria:
+    - [x] All buttons are displayed
+    - [x] Button clicks trigger appropriate processing
 
-- [x] ErrorDisplay.svelte実装
-  - 目的: パースエラーを表示するコンポーネントを実装する
-  - 詳細:
-    - src/components/ErrorDisplay.svelteを作成
-    - parseErrorStoreを購読
-    - エラーメッセージ、行・列番号の表示
-    - クリアボタンの実装
-  - 完了条件:
-    - [x] エラー情報が適切に表示される
-    - [x] エラー解消時に非表示になる
+- [x] ErrorDisplay.svelte Implementation
+  - Purpose: Implement component to display parse errors
+  - Details:
+    - Create src/components/ErrorDisplay.svelte
+    - Subscribe to parseErrorStore
+    - Display error message, line and column numbers
+    - Implement clear button
+  - Completion Criteria:
+    - [x] Error information is displayed appropriately
+    - [x] Hidden when error is resolved
 
-### 4-2. CodeEditorコンポーネント実装
+### 4-2. CodeEditor Component Implementation
 
-- [x] CodeEditor基本実装
-  - 目的: Go言語のソースコードを入力できるエディタを実装する
-  - 詳細:
-    - src/components/CodeEditor.svelteを作成
-    - テキストエリアの実装
-    - デフォルトコード（Hello World）の設定
-    - 入力イベントのハンドリング
-  - 完了条件:
-    - [x] コードを入力できる
-    - [x] デフォルトコードが表示される
-    - [x] 複数行の入力に対応している
+- [x] CodeEditor Basic Implementation
+  - Purpose: Implement editor to input Go source code
+  - Details:
+    - Create src/components/CodeEditor.svelte
+    - Implement textarea
+    - Set default code (Hello World)
+    - Handle input events
+  - Completion Criteria:
+    - [x] Can input code
+    - [x] Default code is displayed
+    - [x] Supports multi-line input
 
-- [x] CodeEditorパース統合
-  - 目的: コード変更時に自動的にパースを実行する
-  - 詳細:
-    - ParserBridgeとの統合
-    - デバウンス処理（300ms）の実装
-    - astStore、parseErrorStoreの更新
-  - 完了条件:
-    - [x] コード変更時にパースが実行される
-    - [x] デバウンスが機能している
-    - [x] パース結果がStoreに反映される
+- [x] CodeEditor Parse Integration
+  - Purpose: Automatically execute parse on code changes
+  - Details:
+    - Integrate with ParserBridge
+    - Implement debounce processing (300ms)
+    - Update astStore and parseErrorStore
+  - Completion Criteria:
+    - [x] Parse executes on code changes
+    - [x] Debounce is functioning
+    - [x] Parse results are reflected in Store
 
-- [x] CodeEditorシンタックスハイライト実装（推奨）
-  - 目的: Go言語のシンタックスハイライトを実装する
-  - 詳細:
-    - ハイライト表示レイヤーの追加
-    - 簡易的な正規表現ベースのハイライト
-    - キーワード、文字列、コメントの色分け
-  - 完了条件:
-    - [x] 基本的なシンタックスハイライトが機能する
-    - [x] パフォーマンスに問題がない
+- [x] CodeEditor Syntax Highlighting Implementation (Recommended)
+  - Purpose: Implement syntax highlighting for Go language
+  - Details:
+    - Add highlight display layer
+    - Simple regex-based highlighting
+    - Color coding for keywords, strings, comments
+  - Completion Criteria:
+    - [x] Basic syntax highlighting functions
+    - [x] No performance issues
 
-- [x] CodeEditorクリック連動機能実装
-  - 目的: クリック・カーソル移動時に対応するASTノードを特定する
-  - 詳細:
-    - clickイベントとkeyupイベントのハンドリング
-    - カーソル位置(selectionStart)の取得
-    - PositionMapperを使用したノード特定
-    - selectedNodeStoreの更新
-  - 完了条件:
-    - [x] クリック・カーソル移動で対応するASTノードが特定される
-    - [x] selectedNodeStoreが更新される
+- [x] CodeEditor Click Interaction Feature Implementation
+  - Purpose: Identify corresponding AST node on click/cursor movement
+  - Details:
+    - Handle click and keyup events
+    - Get cursor position (selectionStart)
+    - Identify node using PositionMapper
+    - Update selectedNodeStore
+  - Completion Criteria:
+    - [x] Corresponding AST node is identified on click/cursor movement
+    - [x] selectedNodeStore is updated
 
-### 4-3. ASTTreeViewコンポーネント実装
+### 4-3. ASTTreeView Component Implementation
 
-- [x] ASTTreeView基本実装
-  - 目的: AST木構造を表示するコンテナコンポーネントを実装する
-  - 詳細:
-    - src/components/ASTTreeView.svelteを作成
-    - astStoreの購読
-    - Expand All / Collapse All機能
-    - 空状態の表示
-  - 完了条件:
-    - [x] ASTが存在する場合にツリーが表示される
-    - [x] 空状態が適切に表示される
-    - [x] Expand/Collapse Allボタンが機能する
+- [x] ASTTreeView Basic Implementation
+  - Purpose: Implement container component to display AST tree structure
+  - Details:
+    - Create src/components/ASTTreeView.svelte
+    - Subscribe to astStore
+    - Expand All / Collapse All functionality
+    - Display empty state
+  - Completion Criteria:
+    - [x] Tree displays when AST exists
+    - [x] Empty state displays appropriately
+    - [x] Expand/Collapse All buttons function
 
-- [x] TreeNode再帰コンポーネント実装
-  - 目的: ツリーノードを再帰的に表示するコンポーネントを実装する
-  - 詳細:
-    - src/components/TreeNode.svelteを作成
-    - 再帰的なコンポーネント構造
-    - 展開/折りたたみ状態の管理
-    - ノードタイプの表示
-    - クリックイベントのハンドリング
-  - 完了条件:
-    - [x] ツリーが階層的に表示される
-    - [x] クリックで展開/折りたたみできる
-    - [x] ノードタイプが表示される
-    - [x] 展開状態がexpandedNodesStoreと同期する
+- [x] TreeNode Recursive Component Implementation
+  - Purpose: Implement component to recursively display tree nodes
+  - Details:
+    - Create src/components/TreeNode.svelte
+    - Recursive component structure
+    - Manage expand/collapse state
+    - Display node type
+    - Handle click events
+  - Completion Criteria:
+    - [x] Tree displays hierarchically
+    - [x] Can expand/collapse on click
+    - [x] Node type is displayed
+    - [x] Expansion state syncs with expandedNodesStore
 
-- [x] TreeNode視覚的装飾実装
-  - 目的: ツリーノードを見やすく装飾する
-  - 詳細:
-    - インデント表示の実装
-    - 展開/折りたたみアイコン
-    - ノードタイプごとの色分け
-    - 選択ノードのハイライト
-  - 完了条件:
-    - [x] 階層が視覚的に理解できる
-    - [x] アイコンが適切に表示される
-    - [x] 色分けが機能している
+- [x] TreeNode Visual Decoration Implementation
+  - Purpose: Decorate tree nodes for better visibility
+  - Details:
+    - Implement indentation display
+    - Expand/collapse icons
+    - Color coding by node type
+    - Highlight selected node
+  - Completion Criteria:
+    - [x] Hierarchy is visually understandable
+    - [x] Icons display appropriately
+    - [x] Color coding functions
 
-### 4-4. 双方向ハイライト実装
+### 4-4. Bidirectional Highlight Implementation
 
-- [x] ツリーノード自動展開機能実装
-  - 目的: 選択されたノードまでの枝を自動的に展開する
-  - 詳細:
-    - selectedNodeStoreの変更を監視
-    - ノードIDから親ノードのパスを取得
-    - expandedNodesStoreに親ノードをすべて追加
-  - 完了条件:
-    - [x] 選択ノードが折りたたまれている場合、自動展開される
-    - [x] 展開アニメーションがスムーズ
-    - [x] パフォーマンスに問題がない
+- [x] Tree Node Auto-expand Feature Implementation
+  - Purpose: Automatically expand branches up to selected node
+  - Details:
+    - Monitor changes to selectedNodeStore
+    - Get path to parent nodes from node ID
+    - Add all parent nodes to expandedNodesStore
+  - Completion Criteria:
+    - [x] Auto-expands if selected node is collapsed
+    - [x] Expansion animation is smooth
+    - [x] No performance issues
 
-- [x] ツリーノードハイライト表示実装
-  - 目的: 選択されたノードを視覚的に強調表示する
-  - 詳細:
-    - 選択ノードに専用CSSクラスを適用
-    - スクロール位置を調整して選択ノードを表示
-    - ハイライト色の設定
-  - 完了条件:
-    - [x] 選択ノードが明確に識別できる
-    - [x] スクロール位置が適切に調整される
-    - [x] 選択解除時にハイライトが消える
+- [x] Tree Node Highlight Display Implementation
+  - Purpose: Visually emphasize selected node
+  - Details:
+    - Apply dedicated CSS class to selected node
+    - Adjust scroll position to show selected node
+    - Configure highlight color
+  - Completion Criteria:
+    - [x] Selected node is clearly identifiable
+    - [x] Scroll position is appropriately adjusted
+    - [x] Highlight disappears when deselected
 
-- [x] ソースコードハイライト機能実装
-  - 目的: ASTツリーで選択されたノードに対応するソースコード範囲をハイライト表示する
-  - 詳細:
-    - highlightedRangeStoreの追加
-    - CodeEditorでselectedNodeStoreを監視
-    - 該当範囲を背景色でハイライト表示
-    - textareaと重ねて表示するハイライトレイヤーの実装
-  - 完了条件:
-    - [x] ASTツリーでノード選択時、ソースコードの該当箇所がハイライトされる
-    - [x] ハイライト範囲が正確
-    - [x] ハイライト表示が視覚的に明確
-    - [x] テキスト編集時もハイライトが適切に更新される
-    - [x] パフォーマンスに問題がない
-
----
-
-## フェーズ5: スタイリングとUI/UX改善
-
-### 5-1. グローバルスタイル実装
-
-- [x] グローバルスタイルシート作成
-  - 目的: アプリケーション全体のスタイルを定義する
-  - 詳細:
-    - src/styles/global.cssを作成
-    - リセットCSS
-    - カラースキーム定義
-    - フォント設定
-    - レスポンシブ対応（デスクトップ優先）
-  - 完了条件:
-    - [x] 統一感のあるデザインが適用される
-    - [x] デスクトップブラウザで見やすい
-
-- [x] コンポーネント個別スタイル実装
-  - 目的: 各Svelteコンポーネントのスタイルを実装する
-  - 詳細:
-    - 各.svelteファイルの`<style>`セクションを実装
-    - BEM命名規則の適用
-    - クリーンで見やすいレイアウト
-  - 完了条件:
-    - [x] すべてのコンポーネントが適切にスタイリングされている
-    - [x] レイアウト崩れがない
-
-### 5-2. UI/UX改善
-
-- [x] レスポンシブレイアウト調整
-  - 目的: ウィンドウサイズに応じた適切な表示を実現する
-  - 詳細:
-    - 2カラムレイアウトの調整
-    - スプリッターの実装（オプション）
-    - 最小幅の設定
-  - 完了条件:
-    - [x] ウィンドウリサイズに対応している
-    - [x] 最小幅以下で崩れない
-
-- [x] アクセシビリティ改善
-  - 目的: キーボード操作やスクリーンリーダー対応を改善する
-  - 詳細:
-    - ARIA属性の追加
-    - キーボードナビゲーション
-    - フォーカス管理
-  - 完了条件:
-    - [x] キーボードで基本操作ができる
-    - [x] ARIA属性が適切に設定されている
+- [x] Source Code Highlight Feature Implementation
+  - Purpose: Highlight source code range corresponding to node selected in AST tree
+  - Details:
+    - Add highlightedRangeStore
+    - Monitor selectedNodeStore in CodeEditor
+    - Highlight corresponding range with background color
+    - Implement highlight layer overlaying textarea
+  - Completion Criteria:
+    - [x] Source code section is highlighted when node is selected in AST tree
+    - [x] Highlight range is accurate
+    - [x] Highlight display is visually clear
+    - [x] Highlight updates appropriately during text editing
+    - [x] No performance issues
 
 ---
 
-## フェーズ6: ビルドとデプロイメント
+## Phase 5: Styling and UI/UX Improvement
 
-### 6-1. 単一HTMLファイル生成
+### 5-1. Global Style Implementation
 
-- [x] Viteビルド設定最適化
-  - 目的: 単一HTMLファイルとして出力できるようにする
-  - 詳細:
-    - vite-plugin-singlefileの設定調整
-    - アセットインライン化の確認
-    - WASMバイナリのBase64エンコード
-  - 完了条件:
-    - [x] `npm run build`で単一HTMLファイルが生成される
-    - [x] ファイルサイズが5.1MB（gzip圧縮時1.4MB）
-    - [x] すべてのリソースがインライン化されている
+- [x] Global Stylesheet Creation
+  - Purpose: Define styles for the entire application
+  - Details:
+    - Create src/styles/global.css
+    - Reset CSS
+    - Color scheme definition
+    - Font settings
+    - Responsive support (desktop-first)
+  - Completion Criteria:
+    - [x] Unified design is applied
+    - [x] Easy to read on desktop browsers
 
-- [x] ビルド検証
-  - 目的: 生成されたHTMLファイルが正常に動作することを確認する
-  - 詳細:
-    - ローカルでHTMLファイルを開いて動作確認
-    - ネットワークトラフィックの確認（ゼロであること）
-    - 全機能の動作確認
-  - 完了条件:
-    - [x] ローカルで全機能が動作する
-    - [x] ネットワークリクエストが発生しない
-    - [x] エラーが発生しない
+- [x] Component-specific Style Implementation
+  - Purpose: Implement styles for each Svelte component
+  - Details:
+    - Implement `<style>` section for each .svelte file
+    - Apply BEM naming convention
+    - Clean and readable layout
+  - Completion Criteria:
+    - [x] All components are properly styled
+    - [x] No layout breaks
 
-### 6-2. GitHub Actions設定
+### 5-2. UI/UX Improvement
 
-- [x] GitHub Actionsワークフロー作成
-  - 目的: GitHub Pagesへの自動デプロイを設定する
-  - 詳細:
-    - .github/workflows/deploy.ymlを作成
-    - Node.js 20とGo 1.21の環境設定
-    - WASMビルド → Viteビルド → デプロイのパイプライン
-    - mainブランチへのpushトリガー
-  - 完了条件:
-    - [x] ワークフローファイルが存在する
-    - [x] DESIGN.mdの仕様に従っている
-    - [x] ローカルでビルドが成功する
+- [x] Responsive Layout Adjustment
+  - Purpose: Achieve appropriate display according to window size
+  - Details:
+    - Adjust 2-column layout
+    - Implement splitter (optional)
+    - Set minimum width
+  - Completion Criteria:
+    - [x] Responds to window resize
+    - [x] Doesn't break below minimum width
 
-- [ ] GitHub Pages設定
-  - 目的: GitHub Pagesでの公開を有効化する
-  - 詳細:
-    - リポジトリ設定でGitHub Pagesを有効化
-    - GitHub Actionsからのデプロイ権限設定
-    - カスタムドメイン設定（オプション）
-  - 完了条件:
-    - [ ] GitHub Pagesが有効化されている
-    - [ ] デプロイ権限が設定されている
-    - [ ] 公開URLが機能する
+- [x] Accessibility Improvement
+  - Purpose: Improve keyboard operation and screen reader support
+  - Details:
+    - Add ARIA attributes
+    - Keyboard navigation
+    - Focus management
+  - Completion Criteria:
+    - [x] Basic operations possible with keyboard
+    - [x] ARIA attributes are properly set
 
 ---
 
-## フェーズ7: テストと品質保証
+## Phase 6: Build and Deployment
 
-### 7-1. 単体テスト実装（推奨）
+### 6-1. Single HTML File Generation
 
-- [x] Vitestセットアップ
-  - 目的: テストフレームワークを設定する
-  - 詳細:
-    - Vitestと@testing-library/svelteのインストール
-    - vitest.config.tsの作成
-    - テストコマンドの追加
-  - 完了条件:
-    - [x] Vitestが実行できる
-    - [x] テストコマンドが機能する
+- [x] Vite Build Configuration Optimization
+  - Purpose: Enable output as a single HTML file
+  - Details:
+    - Adjust vite-plugin-singlefile configuration
+    - Confirm asset inlining
+    - Base64 encode WASM binary
+  - Completion Criteria:
+    - [x] `npm run build` generates single HTML file
+    - [x] File size is 5.1MB (1.4MB when gzip compressed)
+    - [x] All resources are inlined
 
-- [x] Storeテスト実装
-  - 目的: Svelte Storeの単体テストを実装する
-  - 詳細:
-    - ast-storeのテスト
-    - editor-storeのテスト
-    - Storeの購読・更新のテスト
-  - 完了条件:
-    - [x] Storeのテストが実装されている
-    - [x] テストが合格する
+- [x] Build Verification
+  - Purpose: Confirm generated HTML file works properly
+  - Details:
+    - Open HTML file locally and verify operation
+    - Check network traffic (should be zero)
+    - Verify all features work
+  - Completion Criteria:
+    - [x] All features work locally
+    - [x] No network requests occur
+    - [x] No errors occur
 
-- [x] コアロジックテスト実装
-  - 目的: ParserBridge、PositionMapperのテストを実装する
-  - 詳細:
-    - パース機能のテスト
-    - 位置マッピングのテスト
-    - エラーハンドリングのテスト
-  - 完了条件:
-    - [x] コアロジックのテストが実装されている
-    - [x] 32個のテストが全て合格する
+### 6-2. GitHub Actions Configuration
 
-### 7-2. 統合テスト実装（推奨）
+- [x] GitHub Actions Workflow Creation
+  - Purpose: Configure automatic deployment to GitHub Pages
+  - Details:
+    - Create .github/workflows/deploy.yml
+    - Configure Node.js 20 and Go 1.21 environment
+    - Pipeline: WASM build → Vite build → Deploy
+    - Trigger on push to main branch
+  - Completion Criteria:
+    - [x] Workflow file exists
+    - [x] Follows DESIGN.md specifications
+    - [x] Build succeeds locally
 
-- [ ] コンポーネント統合テスト実装
-  - 目的: コンポーネント間の連携をテストする
-  - 詳細:
-    - CodeEditor + ASTTreeViewのテスト
-    - CodeEditor + HoverTooltipのテスト
-    - TreeNode展開/折りたたみのテスト
-  - 完了条件:
-    - [ ] 統合テストが実装されている
-    - [ ] テストが合格する
-
-### 7-3. E2Eテスト実装（推奨）
-
-- [x] Playwrightセットアップ
-  - 目的: E2Eテストフレームワークを設定する
-  - 詳細:
-    - Playwrightのインストール
-    - playwright.config.tsの作成
-    - テストブラウザの設定
-  - 完了条件:
-    - [x] Playwrightが実行できる
-    - [x] 複数ブラウザ（Chromium, Firefox, WebKit）でテストできる
-
-- [x] E2Eテストシナリオ実装
-  - 目的: エンドツーエンドのシナリオをテストする
-  - 詳細:
-    - ページロード → デフォルトコード表示 → パース成功
-    - コード入力 → AST更新
-    - エラーコード入力 → エラー表示
-    - ノード展開/折りたたみ → ハイライト表示
-  - 完了条件:
-    - [x] E2Eテストが実装されている（9シナリオ）
-    - [x] Chromium, Firefox, WebKitの3ブラウザで実行可能
+- [ ] GitHub Pages Configuration
+  - Purpose: Enable publication on GitHub Pages
+  - Details:
+    - Enable GitHub Pages in repository settings
+    - Configure deploy permissions from GitHub Actions
+    - Custom domain configuration (optional)
+  - Completion Criteria:
+    - [ ] GitHub Pages is enabled
+    - [ ] Deploy permissions are configured
+    - [ ] Public URL works
 
 ---
 
-## フェーズ8: ドキュメント整備
+## Phase 7: Testing and Quality Assurance
 
-### 8-1. ユーザードキュメント作成
+### 7-1. Unit Test Implementation (Recommended)
 
-- [x] README.md作成
-  - 目的: プロジェクトの概要と使い方を説明する
-  - 詳細:
-    - プロジェクト概要
-    - デモリンク
-    - 使用方法
-    - 開発者向け情報
-    - ライセンス情報
-  - 完了条件:
-    - [x] README.mdが存在する
-    - [x] 初めて見る人が理解できる内容
+- [x] Vitest Setup
+  - Purpose: Configure test framework
+  - Details:
+    - Install Vitest and @testing-library/svelte
+    - Create vitest.config.ts
+    - Add test commands
+  - Completion Criteria:
+    - [x] Vitest can run
+    - [x] Test commands function
 
-- [x] ライセンスファイル作成
-  - 目的: MITライセンスを適用する
-  - 詳細:
-    - LICENSEファイルを作成
-    - 著作権表示を追加
-  - 完了条件:
-    - [x] LICENSEファイルが存在する
-    - [x] MITライセンスが適用されている
+- [x] Store Test Implementation
+  - Purpose: Implement unit tests for Svelte Store
+  - Details:
+    - Test ast-store
+    - Test editor-store
+    - Test Store subscription and updates
+  - Completion Criteria:
+    - [x] Store tests are implemented
+    - [x] Tests pass
 
-### 8-2. 開発者ドキュメント更新
+- [x] Core Logic Test Implementation
+  - Purpose: Implement tests for ParserBridge and PositionMapper
+  - Details:
+    - Test parse functionality
+    - Test position mapping
+    - Test error handling
+  - Completion Criteria:
+    - [x] Core logic tests are implemented
+    - [x] All 32 tests pass
 
-- [x] アーキテクチャドキュメント更新
-  - 目的: 実装に基づいてDESIGN.mdを更新する
-  - 詳細:
-    - 実装と設計の差異を確認
-    - DESIGN.mdの更新
-    - コード例の更新
-  - 完了条件:
-    - [x] DESIGN.mdが最新の実装を反映している
-    - [x] 差異が文書化されている
+### 7-2. Integration Test Implementation (Recommended)
 
-- [ ] コントリビューションガイド作成（オプション）
-  - 目的: オープンソースプロジェクトとして貢献方法を明示する
-  - 詳細:
-    - CONTRIBUTING.mdの作成
-    - 開発環境セットアップ手順
-    - プルリクエストガイドライン
-  - 完了条件:
-    - [ ] CONTRIBUTING.mdが存在する
-    - [ ] 貢献方法が明確
+- [ ] Component Integration Test Implementation
+  - Purpose: Test collaboration between components
+  - Details:
+    - Test CodeEditor + ASTTreeView
+    - Test CodeEditor + HoverTooltip
+    - Test TreeNode expand/collapse
+  - Completion Criteria:
+    - [ ] Integration tests are implemented
+    - [ ] Tests pass
+
+### 7-3. E2E Test Implementation (Recommended)
+
+- [x] Playwright Setup
+  - Purpose: Configure E2E test framework
+  - Details:
+    - Install Playwright
+    - Create playwright.config.ts
+    - Configure test browsers
+  - Completion Criteria:
+    - [x] Playwright can run
+    - [x] Can test on multiple browsers (Chromium, Firefox, WebKit)
+
+- [x] E2E Test Scenario Implementation
+  - Purpose: Test end-to-end scenarios
+  - Details:
+    - Page load → Display default code → Parse success
+    - Code input → AST update
+    - Error code input → Error display
+    - Node expand/collapse → Highlight display
+  - Completion Criteria:
+    - [x] E2E tests are implemented (9 scenarios)
+    - [x] Can run on Chromium, Firefox, WebKit
 
 ---
 
-## タスク実行の推奨順序
+## Phase 8: Documentation
 
-1. **フェーズ1**: すべてのタスクを順番に実行（前提条件）
-2. **フェーズ2**: すべてのタスクを順番に実行（AST解析の基盤）
-3. **フェーズ3**: すべてのタスクを順番に実行（状態管理の基盤）
-4. **フェーズ4**: 4-1 → 4-2 → 4-3 → 4-4の順で実行（UI実装）
-5. **フェーズ5**: フェーズ4完了後に実行（見た目の改善）
-6. **フェーズ6**: フェーズ5完了後に実行（デプロイ）
-7. **フェーズ7**: フェーズ6と並行可能（品質保証）
-8. **フェーズ8**: すべてのフェーズ完了後に実行（ドキュメント）
+### 8-1. User Documentation Creation
+
+- [x] README.md Creation
+  - Purpose: Explain project overview and usage
+  - Details:
+    - Project overview
+    - Demo link
+    - Usage instructions
+    - Developer information
+    - License information
+  - Completion Criteria:
+    - [x] README.md exists
+    - [x] Content understandable for first-time viewers
+
+- [x] License File Creation
+  - Purpose: Apply MIT License
+  - Details:
+    - Create LICENSE file
+    - Add copyright notice
+  - Completion Criteria:
+    - [x] LICENSE file exists
+    - [x] MIT License is applied
+
+### 8-2. Developer Documentation Update
+
+- [x] Architecture Documentation Update
+  - Purpose: Update DESIGN.md based on implementation
+  - Details:
+    - Check differences between implementation and design
+    - Update DESIGN.md
+    - Update code examples
+  - Completion Criteria:
+    - [x] DESIGN.md reflects latest implementation
+    - [x] Differences are documented
+
+- [ ] Contribution Guide Creation (Optional)
+  - Purpose: Clarify contribution methods as open source project
+  - Details:
+    - Create CONTRIBUTING.md
+    - Development environment setup instructions
+    - Pull request guidelines
+  - Completion Criteria:
+    - [ ] CONTRIBUTING.md exists
+    - [ ] Contribution methods are clear
 
 ---
 
-## 次のステップ
+## Recommended Task Execution Order
 
-タスク定義が完了しました。実装を開始するには、以下のコマンドを実行してください:
+1. **Phase 1**: Execute all tasks in order (prerequisite)
+2. **Phase 2**: Execute all tasks in order (AST analysis foundation)
+3. **Phase 3**: Execute all tasks in order (state management foundation)
+4. **Phase 4**: Execute in order: 4-1 → 4-2 → 4-3 → 4-4 (UI implementation)
+5. **Phase 5**: Execute after Phase 4 completion (visual improvement)
+6. **Phase 6**: Execute after Phase 5 completion (deployment)
+7. **Phase 7**: Can run in parallel with Phase 6 (quality assurance)
+8. **Phase 8**: Execute after all phases complete (documentation)
+
+---
+
+## Next Steps
+
+Task definition is complete. To begin implementation, run the following commands:
 
 ```bash
-# 特定のタスクを実行
-/prj-exec-task [タスク名またはタスクID]
+# Execute specific task
+/prj-exec-task [task name or task ID]
 
-# フェーズ内のすべてのタスクを実行
-/prj-exec-tasks --until=[タスク名またはタスクID]
+# Execute all tasks within a phase
+/prj-exec-tasks --until=[task name or task ID]
 ```
 
-**推奨される最初のタスク**: フェーズ1-1「プロジェクト初期化」から開始してください。
+**Recommended First Task**: Start with Phase 1-1 "Project Initialization".
 
 ---
 
-**文書バージョン**: 1.0  
-**作成日**: 2025-11-23
+**Document Version**: 1.0  
+**Created**: 2025-11-23

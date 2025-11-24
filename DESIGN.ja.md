@@ -1,76 +1,76 @@
-# Go AST Inspector - Technical Design Document
+# Go AST Inspector - 技術設計書
 
-## Document Information
+## 文書情報
 
-**Version**: 1.3  
-**Created**: 2025-11-23  
-**Last Updated**: 2025-11-24  
-**Related Documents**: [REQUIREMENTS.md](./REQUIREMENTS.md)  
-**Revision History**:
-- v1.3: Removed HoverTooltip (requirements change), added HeaderBar, reorganized documentation to reflect implementation completion
-- v1.2: Added bidirectional highlight feature (source code ↔ AST tree linking), added highlightedRangeStore
-- v1.1: Changed UI framework to Svelte 5.x, completely revised component design
-- v1.0: Initial version (Vanilla TypeScript version)
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Technology Stack](#technology-stack)
-3. [Architecture Design](#architecture-design)
-4. [Module Design](#module-design)
-5. [Data Flow Design](#data-flow-design)
-6. [UI Component Design](#ui-component-design)
-7. [Build Configuration](#build-configuration)
-8. [Deployment Design](#deployment-design)
-9. [Development Environment Setup](#development-environment-setup)
+**バージョン**: 1.3  
+**作成日**: 2025-11-23  
+**最終更新日**: 2025-11-24  
+**関連文書**: [REQUIREMENTS.md](./REQUIREMENTS.md)  
+**更新履歴**:
+- v1.3: HoverTooltip削除（要件変更）、HeaderBar追加、実装完了に伴う記載整理
+- v1.2: 双方向ハイライト機能追加（ソースコード↔ASTツリー連動）、highlightedRangeStore追加
+- v1.1: UIフレームワークをSvelte 5.xに変更、コンポーネント設計を全面改訂
+- v1.0: 初版作成（Vanilla TypeScript版）
 
 ---
 
-## Overview
+## 目次
 
-This design document defines the technical implementation approach for the Go AST Inspector project. To meet the requirements defined in REQUIREMENTS.md, we adopt a design that combines WebAssembly technology with modern frontend technologies.
-
-### Design Principles
-
-1. **Thorough Standalone Nature**: Embed all resources in a single HTML file to achieve complete offline operation
-2. **Emphasis on Type Safety**: Combine TypeScript and Svelte to minimize runtime errors
-3. **Ensure Maintainability**: Enable easy future extension and modification through Svelte's component-based design
-4. **Performance Optimization**: Fast AST parsing through WebAssembly and efficient rendering by Svelte
-5. **Development Efficiency**: Concise implementation of state management and UI updates through Svelte's reactive system
-
----
-
-## Technology Stack
-
-### Adopted Technologies
-
-| Category | Technology | Version | Selection Reason |
-|----------|------------|---------|------------------|
-| **Language** | TypeScript | 5.x | Improved type safety, development efficiency, and maintainability |
-| **UI Framework** | Svelte | 5.x | Lightweight, fast, reactive state management, small bundle size |
-| **Build Tool** | Vite | 5.x | Fast development experience, Svelte integration, single HTML file generation |
-| **Linter/Formatter** | Biome | 1.x | Fast, all-in-one, TypeScript/Svelte support |
-| **AST Parser** | Go WebAssembly | Go 1.21+ | Use of standard libraries (go/ast, go/parser) |
-| **UI Language** | English | - | Intended for international use |
-
-### Technologies Not Adopted and Reasons
-
-| Technology | Reason for Not Adopting |
-|------------|-------------------------|
-| **Vanilla JavaScript/TypeScript** | To avoid complexity in component and state management, adopted Svelte |
-| **React** | Large bundle size, unsuitable for standalone nature |
-| **Vue** | Larger bundle size compared to Svelte |
-| **ESLint + Prettier** | Biome is fast and all-in-one, no need for multiple tool combinations |
-| **Webpack/Parcel** | Vite is faster and has a richer plugin ecosystem for single HTML file generation |
-| **JavaScript-based Go parser** | Prioritizing accuracy and standard compliance, using Go's official go/parser via WebAssembly |
+1. [概要](#概要)
+2. [技術スタック](#技術スタック)
+3. [アーキテクチャ設計](#アーキテクチャ設計)
+4. [モジュール設計](#モジュール設計)
+5. [データフロー設計](#データフロー設計)
+6. [UIコンポーネント設計](#uiコンポーネント設計)
+7. [ビルド設定](#ビルド設定)
+8. [デプロイメント設計](#デプロイメント設計)
+9. [開発環境セットアップ](#開発環境セットアップ)
 
 ---
 
-## Architecture Design
+## 概要
 
-### Overall Structure
+本設計書は、Go AST Inspectorプロジェクトの技術的な実装方針を定義する。REQUIREMENTS.mdで定義された要件を満たすため、WebAssembly技術とモダンなフロントエンド技術を組み合わせた設計を採用する。
+
+### 設計方針
+
+1. **スタンドアローン性の徹底**: すべてのリソースを単一HTMLファイルに埋め込み、完全なオフライン動作を実現
+2. **型安全性の重視**: TypeScriptとSvelteを組み合わせ、実行時エラーを最小化
+3. **保守性の確保**: Svelteのコンポーネントベース設計により、将来的な拡張・修正を容易にする
+4. **パフォーマンス最適化**: WebAssemblyによる高速なAST解析とSvelteの効率的なレンダリング
+5. **開発効率**: Svelteのリアクティブシステムにより、状態管理とUI更新を簡潔に実装
+
+---
+
+## 技術スタック
+
+### 採用技術
+
+| カテゴリ | 技術 | バージョン | 選定理由 |
+|---------|------|-----------|---------|
+| **言語** | TypeScript | 5.x | 型安全性、開発効率、保守性の向上 |
+| **UIフレームワーク** | Svelte | 5.x | 軽量、高速、リアクティブな状態管理、小さなバンドルサイズ |
+| **ビルドツール** | Vite | 5.x | 高速な開発体験、Svelte統合、単一HTMLファイル生成 |
+| **Linter/Formatter** | Biome | 1.x | 高速、all-in-one、TypeScript/Svelte対応 |
+| **ASTパーサー** | Go WebAssembly | Go 1.21+ | 標準ライブラリ(go/ast, go/parser)の利用 |
+| **UI言語** | 英語 | - | 国際的な利用を想定 |
+
+### 不採用技術と理由
+
+| 技術 | 不採用理由 |
+|------|-----------|
+| **Vanilla JavaScript/TypeScript** | コンポーネント管理と状態管理の複雑化を避けるため、Svelteを採用 |
+| **React** | バンドルサイズが大きく、スタンドアローン性に不向き |
+| **Vue** | Svelteと比較してバンドルサイズが大きい |
+| **ESLint + Prettier** | Biomeが高速でall-in-oneのため、複数ツールの組み合わせは不要 |
+| **Webpack/Parcel** | Viteの方が高速で、単一HTMLファイル生成のプラグインエコシステムが充実 |
+| **JavaScript実装のGoパーサー** | 正確性と標準準拠性を重視し、Go公式のgo/parserをWebAssemblyで使用 |
+
+---
+
+## アーキテクチャ設計
+
+### 全体構成
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -109,118 +109,118 @@ This design document defines the technical implementation approach for the Go AS
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Layer Structure
+### レイヤー構成
 
 #### 1. WebAssembly Layer
-- **Responsibility**: Convert Go source code to AST
-- **Technology**: Go 1.21+, go/parser, go/ast, go/token
-- **Interface**: Messaging between JavaScript ↔ WebAssembly
+- **責務**: Go言語のソースコードをASTに変換
+- **技術**: Go 1.21+、go/parser、go/ast、go/token
+- **インターフェース**: JavaScript ↔ WebAssembly間のメッセージング
 
 #### 2. Application Logic Layer
-- **Responsibility**: Business logic, state management, data transformation
-- **Components**:
-  - `ASTManager`: AST state management
-  - `Parser`: Wrapper for WASM calls
-  - `PositionMapper`: Mapping between source code positions and AST nodes
+- **責務**: ビジネスロジック、状態管理、データ変換
+- **コンポーネント**:
+  - `ASTManager`: AST状態の管理
+  - `Parser`: WASM呼び出しのラッパー
+  - `PositionMapper`: ソースコード位置とASTノードのマッピング
 
 #### 3. UI Layer (Svelte Components)
-- **Responsibility**: User interface display and operations
-- **Svelte Components**:
-  - `App.svelte`: Root component, layout management
-  - `CodeEditor.svelte`: Source code input editor (with bidirectional highlight feature)
-  - `ASTTreeView.svelte`: Container for AST tree structure display
-  - `TreeNode.svelte`: Tree node (recursive component, with auto-expand and highlight features)
-  - `HeaderBar.svelte`: Header bar and control buttons
-  - `ErrorDisplay.svelte`: Error message display
+- **責務**: ユーザーインターフェースの表示と操作
+- **Svelteコンポーネント**:
+  - `App.svelte`: ルートコンポーネント、レイアウト管理
+  - `CodeEditor.svelte`: ソースコード入力エディタ（双方向ハイライト機能付き）
+  - `ASTTreeView.svelte`: AST木構造表示のコンテナ
+  - `TreeNode.svelte`: ツリーノード（再帰的コンポーネント、自動展開・ハイライト機能付き）
+  - `HeaderBar.svelte`: ヘッダーバーとコントロールボタン
+  - `ErrorDisplay.svelte`: エラーメッセージ表示
 
 ---
 
-## Module Design
+## モジュール設計
 
-### Directory Structure
+### ディレクトリ構成
 
 ```
 go-ast-inspector/
 ├── src/
-│   ├── main.ts                 # Entry point
-│   ├── App.svelte              # Root component
+│   ├── main.ts                 # エントリーポイント
+│   ├── App.svelte              # ルートコンポーネント
 │   ├── wasm/
-│   │   ├── parser.go           # Go AST parser implementation
-│   │   ├── main.go             # WASM entry point
-│   │   └── build.sh            # WASM build script
+│   │   ├── parser.go           # Go AST パーサー実装
+│   │   ├── main.go             # WASM エントリーポイント
+│   │   └── build.sh            # WASM ビルドスクリプト
 │   ├── lib/
 │   │   ├── stores/
-│   │   │   ├── ast-store.ts    # AST state management (Svelte Store)
-│   │   │   └── editor-store.ts # Editor state management (Svelte Store)
+│   │   │   ├── ast-store.ts    # AST状態管理（Svelte Store）
+│   │   │   └── editor-store.ts # エディタ状態管理（Svelte Store）
 │   │   ├── core/
-│   │   │   ├── parser-bridge.ts    # WASM bridge
-│   │   │   ├── position-mapper.ts  # Position mapping
-│   │   │   └── types.ts            # Common type definitions
+│   │   │   ├── parser-bridge.ts    # WASM ブリッジ
+│   │   │   ├── position-mapper.ts  # 位置マッピング
+│   │   │   └── types.ts            # 共通型定義
 │   │   └── utils/
-│   │       └── constants.ts        # Constants definition
+│   │       └── constants.ts        # 定数定義
 │   ├── components/
-│   │   ├── CodeEditor.svelte       # Code editor component
-│   │   ├── ASTTreeView.svelte      # AST tree view component
-│   │   ├── TreeNode.svelte         # Tree node (recursive)
-│   │   ├── HeaderBar.svelte        # Header bar
-│   │   └── ErrorDisplay.svelte     # Error display
+│   │   ├── CodeEditor.svelte       # コードエディタコンポーネント
+│   │   ├── ASTTreeView.svelte      # ASTツリービューコンポーネント
+│   │   ├── TreeNode.svelte         # ツリーノード（再帰）
+│   │   ├── HeaderBar.svelte        # ヘッダーバー
+│   │   └── ErrorDisplay.svelte     # エラー表示
 │   └── styles/
-│       └── global.css              # Global styles
+│       └── global.css              # グローバルスタイル
 ├── public/
-│   └── index.html              # HTML template
-├── dist/                       # Build output (single HTML file)
-├── vite.config.ts              # Vite configuration
-├── svelte.config.js            # Svelte configuration
-├── biome.json                  # Biome configuration
-├── tsconfig.json               # TypeScript configuration
-├── package.json                # npm configuration
+│   └── index.html              # HTMLテンプレート
+├── dist/                       # ビルド出力（単一HTMLファイル）
+├── vite.config.ts              # Vite設定
+├── svelte.config.js            # Svelte設定
+├── biome.json                  # Biome設定
+├── tsconfig.json               # TypeScript設定
+├── package.json                # npm設定
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # GitHub Pages deployment workflow
-├── REQUIREMENTS.md             # Requirements document
-├── DESIGN.md                   # Technical design document (this document)
-└── README.md                   # Project description
+│       └── deploy.yml          # GitHub Pages デプロイワークフロー
+├── REQUIREMENTS.md             # 要件定義書
+├── DESIGN.md                   # 技術設計書（本文書）
+└── README.md                   # プロジェクト説明
 ```
 
-### Key Module Details
+### 主要モジュール詳細
 
 #### src/lib/stores/ast-store.ts
 
 ```typescript
-// State management using Svelte Writable Store
+// Svelte Writable Storeを使用した状態管理
 import { writable, derived } from 'svelte/store';
 
 export interface ASTNode {
-  type: string;           // Node type (e.g., "FuncDecl", "Ident")
-  pos: number;            // Start position
-  end: number;            // End position
-  children: ASTNode[];    // Child nodes
-  metadata: Record<string, unknown>; // Metadata
+  type: string;           // ノードタイプ (e.g., "FuncDecl", "Ident")
+  pos: number;            // 開始位置
+  end: number;            // 終了位置
+  children: ASTNode[];    // 子ノード
+  metadata: Record<string, unknown>; // メタデータ
 }
 
-// Store holding AST state
+// AST状態を保持するStore
 export const astStore = writable<ASTNode | null>(null);
 
-// Store holding error state
+// エラー状態を保持するStore
 export const parseErrorStore = writable<{
   message: string;
   line: number;
   column: number;
 } | null>(null);
 
-// Store holding expanded node IDs
+// 展開されたノードIDを保持するStore
 export const expandedNodesStore = writable<Set<string>>(new Set());
 
-// Store holding selected node
+// 選択されたノードを保持するStore
 export const selectedNodeStore = writable<ASTNode | null>(null);
 
-// Store holding source code highlight range
+// ソースコードのハイライト範囲を保持するStore
 export const highlightedRangeStore = writable<{
-  start: number;  // Start position (byte offset)
-  end: number;    // End position (byte offset)
+  start: number;  // 開始位置（バイトオフセット）
+  end: number;    // 終了位置（バイトオフセット）
 } | null>(null);
 
-// Store holding source code
+// ソースコードを保持するStore
 export const sourceCodeStore = writable<string>("");
 ```
 
@@ -240,13 +240,13 @@ interface ParseResult {
 class ParserBridge {
   private wasmInstance: WebAssembly.Instance | null = null;
 
-  // WASM initialization
+  // WASM初期化
   async initialize(): Promise<void>;
   
-  // Code parsing
+  // コードパース
   async parse(sourceCode: string): Promise<ParseResult>;
   
-  // WASM readiness check
+  // WASM準備確認
   isReady(): boolean;
 }
 ```
@@ -263,19 +263,19 @@ class PositionMapper {
   private sourceCode: string = '';
   private astNodes: Map<string, ASTNode> = new Map();
 
-  // Set source code
+  // ソースコード設定
   setSourceCode(code: string): void;
   
-  // Set AST
+  // AST設定
   setAST(ast: ASTNode): void;
   
-  // Get line and column from byte position
+  // バイト位置から行・列を取得
   getPositionFromOffset(offset: number): { line: number; column: number };
   
-  // Get byte position from line and column
+  // 行・列からバイト位置を取得
   getOffsetFromPosition(line: number, column: number): number;
   
-  // Get AST node at specified position
+  // 指定位置のASTノードを取得
   getNodeAtPosition(line: number, column: number): ASTNode | null;
 }
 ```
@@ -290,9 +290,9 @@ class PositionMapper {
   export let defaultExpandLevel = 2;
   
   function expandAll() {
-    // Add all node IDs to expandedNodesStore
+    // すべてのノードIDをexpandedNodesStoreに追加
     expandedNodesStore.update(nodes => {
-      // Traverse entire AST and collect all node IDs
+      // AST全体を走査してすべてのノードIDを収集
       return new Set(/* all node IDs */);
     });
   }
@@ -386,7 +386,7 @@ func main() {
     }
   }
   
-  // Monitor selection from AST tree and highlight display
+  // ASTツリーからの選択を監視してハイライト表示
   $effect(() => {
     if ($selectedNodeStore) {
       highlightedRangeStore.set({
@@ -411,7 +411,7 @@ func main() {
     spellcheck="false"
     placeholder="Enter Go code here..."
   />
-  <!-- Highlight display layer (background) -->
+  <!-- ハイライト表示レイヤー（背景） -->
   {#if $highlightedRangeStore}
     <div class="highlight-overlay" style="..."></div>
   {/if}
@@ -420,118 +420,118 @@ func main() {
 
 ---
 
-## Data Flow Design
+## データフロー設計
 
-### 1. Initialization Flow
-
-```
-Page Load
-    ↓
-Execute main.ts
-    ↓
-Initialize WASM (ParserBridge.initialize())
-    ↓
-Initialize UI (generate each component)
-    ↓
-Set default code ("Hello World" sample)
-    ↓
-Execute initial parse
-    ↓
-Display AST
-```
-
-### 2. Code Edit Flow
+### 1. 初期化フロー
 
 ```
-User edits code
+ページロード
     ↓
-Fire CodeEditor.onChange event
+main.ts 実行
+    ↓
+WASM初期化 (ParserBridge.initialize())
+    ↓
+UI初期化 (各コンポーネント生成)
+    ↓
+デフォルトコード設定 ("Hello World" サンプル)
+    ↓
+初回パース実行
+    ↓
+AST表示
+```
+
+### 2. コード編集フロー
+
+```
+ユーザーがコード編集
+    ↓
+CodeEditor.onChange イベント発火
     ↓
 ParserBridge.parse(sourceCode)
     ↓
-Execute parse in WASM
+WASM でパース実行
     ↓
-Get ParseResult
-    ├─ Success
+ParseResult 取得
+    ├─ 成功
     │   ↓
     │   ASTManager.updateAST(ast)
     │   ↓
-    │   Notify each listener
+    │   各リスナーに通知
     │   ↓
     │   ASTTreeView.updateAST(ast)
     │   ↓
-    │   Redraw tree
+    │   ツリー再描画
     │
-    └─ Failure
+    └─ 失敗
         ↓
         ErrorDisplay.show(error)
         ↓
-        Highlight error line
+        エラー行をハイライト
 ```
 
-### 3. Bidirectional Highlight Flow
+### 3. 双方向ハイライトフロー
 
-#### 3-1. Source Code → AST Tree Linking
+#### 3-1. ソースコード → ASTツリー連動
 
 ```
-User clicks on code/moves cursor
+ユーザーがコード上でクリック/カーソル移動
     ↓
-Fire CodeEditor.onClick/onKeyUp event
+CodeEditor.onClick/onKeyUp イベント発火
     ↓
-Get cursor position (offset)
+カーソル位置(offset)を取得
     ↓
 PositionMapper.findNodeAtOffset(offset)
     ↓
-Get corresponding AST node
+対応するASTノードを取得
     ↓
 selectedNodeStore.set(node)
     ↓
-TreeNode monitors selectedNode
+TreeNode が selectedNode を監視
     ↓
-Auto-expand branch to relevant node
+該当ノードまでの枝を自動展開
     ↓
-Highlight relevant node
+該当ノードをハイライト表示
     ↓
-Auto-scroll to relevant node
+該当ノードまで自動スクロール
 ```
 
-#### 3-2. AST Tree → Source Code Linking
+#### 3-2. ASTツリー → ソースコード連動
 
 ```
-User clicks on TreeNode
+ユーザーがTreeNode上でクリック
     ↓
-Fire TreeNode.onClick event
+TreeNode.onClick イベント発火
     ↓
 selectedNodeStore.set(node)
     ↓
-CodeEditor monitors selectedNode
+CodeEditor が selectedNode を監視
     ↓
-Calculate relevant range from node's pos/end
+ノードのpos/endから該当範囲を計算
     ↓
 highlightedRangeStore.set({start: pos, end: end})
     ↓
-Highlight relevant range in CodeEditor
+CodeEditor内の該当範囲をハイライト表示
     ↓
-Auto-scroll to relevant range (recommended)
+該当範囲まで自動スクロール（推奨）
 ```
 
-### 4. Tree Operation Flow
+### 4. ツリー操作フロー
 
 ```
-User clicks node
+ユーザーがノードをクリック
     ↓
 ASTTreeView.toggleNode(nodeId)
     ↓
-Update expand state
+展開状態を更新
     ↓
-Redraw only relevant node (partial update)
+該当ノードのみ再描画（部分更新）
 ```
 
 ---
 
-## UI Component Design
+## UIコンポーネント設計
 
-### Layout Structure
+### レイアウト構成
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -560,44 +560,44 @@ Redraw only relevant node (partial update)
 └────────────────────────────────────────────────────────┘
 ```
 
-### UI Component Specifications
+### UIコンポーネント仕様
 
 #### 1. Header Bar
-- **Parse Button**: Execute manual parse (when auto-parse is disabled)
-- **Expand All**: Expand all nodes
-- **Collapse All**: Collapse all nodes
+- **Parse Button**: 手動パース実行（自動パース無効時）
+- **Expand All**: すべてのノードを展開
+- **Collapse All**: すべてのノードを折りたたみ
 
 #### 2. Code Editor
-- **Features**:
-  - Syntax highlighting (Go language, recommended)
-  - Line number display (recommended)
-  - AST node selection on click/cursor movement
-  - Highlight code range corresponding to selected AST node
-  - Error line marking
-- **Technology Used**: `<textarea>` + custom highlight implementation
-- **Highlight Display**: Emphasize the range of selected AST node with background color
+- **機能**:
+  - シンタックスハイライト（Go言語、推奨）
+  - 行番号表示（推奨）
+  - クリック/カーソル移動時のASTノード選択
+  - 選択されたASTノードに対応するコード範囲のハイライト表示
+  - エラー行のマーキング
+- **使用技術**: `<textarea>` + カスタムハイライト実装
+- **ハイライト表示**: 選択されたASTノードの範囲を背景色で強調表示
 
 #### 3. AST Tree View
-- **Features**:
-  - Hierarchical tree display
-  - Expand/collapse on node click
-  - Visual distinction of node types (color coding)
-  - Highlight of selected node
-  - Auto-expand and highlight based on selected position in code editor
-- **Technology Used**: No virtual DOM, efficient DOM manipulation
+- **機能**:
+  - 階層的なツリー表示
+  - ノードクリックで展開/折りたたみ
+  - ノードタイプの視覚的区別（色分け）
+  - 選択ノードのハイライト
+  - コードエディタでの選択位置に応じた自動展開・ハイライト
+- **使用技術**: 仮想DOM不使用、効率的なDOM操作
 
 #### 4. Error Display
-- **Display Content**:
-  - Error message
-  - Error location (line and column)
-  - Highlight of relevant line
-- **Display Location**: Status Bar or inline message
+- **表示内容**:
+  - エラーメッセージ
+  - エラー発生位置（行・列）
+  - 該当行のハイライト
+- **表示位置**: Status Bar またはインラインメッセージ
 
 ---
 
-## Build Configuration
+## ビルド設定
 
-### Vite Configuration (vite.config.ts)
+### Vite設定 (vite.config.ts)
 
 ```typescript
 import { defineConfig } from 'vite';
@@ -608,26 +608,26 @@ export default defineConfig({
   plugins: [
     svelte({
       compilerOptions: {
-        // Enable Svelte 5 runes mode
+        // Svelte 5のルーンモードを有効化
         runes: true,
       },
     }),
     viteSingleFile({
-      removeViteModuleLoader: true, // Remove Vite module loader
+      removeViteModuleLoader: true, // Viteモジュールローダーを削除
     }),
   ],
   build: {
     target: 'es2020',
     outDir: 'dist',
-    assetsInlineLimit: 100000000, // Inline all assets
+    assetsInlineLimit: 100000000, // すべてのアセットをインライン化
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        inlineDynamicImports: true, // Also inline dynamic imports
+        inlineDynamicImports: true, // 動的インポートもインライン化
       },
     },
   },
-  base: './', // Relative path support
+  base: './', // 相対パス対応
   resolve: {
     alias: {
       '$lib': '/src/lib',
@@ -636,7 +636,7 @@ export default defineConfig({
 });
 ```
 
-### TypeScript Configuration (tsconfig.json)
+### TypeScript設定 (tsconfig.json)
 
 ```json
 {
@@ -660,7 +660,7 @@ export default defineConfig({
 }
 ```
 
-### Biome Configuration (biome.json)
+### Biome設定 (biome.json)
 
 ```json
 {
@@ -696,7 +696,7 @@ export default defineConfig({
 }
 ```
 
-### Svelte Configuration (svelte.config.js)
+### Svelte設定 (svelte.config.js)
 
 ```javascript
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
@@ -704,12 +704,12 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 export default {
   preprocess: vitePreprocess(),
   compilerOptions: {
-    runes: true, // Enable Svelte 5 runes mode
+    runes: true, // Svelte 5のルーンモードを有効化
   },
 };
 ```
 
-### package.json Scripts and Dependencies
+### package.json スクリプトと依存関係
 
 ```json
 {
@@ -737,7 +737,7 @@ export default {
 }
 ```
 
-### WASM Build Script (src/wasm/build.sh)
+### WASM ビルドスクリプト (src/wasm/build.sh)
 
 ```bash
 #!/bin/bash
@@ -755,11 +755,11 @@ echo "WASM build complete!"
 
 ---
 
-## Deployment Design
+## デプロイメント設計
 
-### GitHub Pages Deployment
+### GitHub Pages デプロイ
 
-#### GitHub Actions Workflow (.github/workflows/deploy.yml)
+#### GitHub Actions ワークフロー (.github/workflows/deploy.yml)
 
 ```yaml
 name: Deploy to GitHub Pages
@@ -823,99 +823,99 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-### Build Artifacts
+### ビルド成果物
 
-- **Output File**: `dist/index.html`
-- **File Size Target**: 5MB or less
-- **Includes**:
-  - All HTML
-  - Inlined CSS
-  - Inlined JavaScript (TypeScript compiled)
-  - Base64-encoded WASM binary
+- **出力ファイル**: `dist/index.html`
+- **ファイルサイズ目標**: 5MB以下
+- **含まれるもの**:
+  - すべてのHTML
+  - インライン化されたCSS
+  - インライン化されたJavaScript（TypeScriptコンパイル済み）
+  - Base64エンコードされたWASMバイナリ
 
 ---
 
-## Development Environment Setup
+## 開発環境セットアップ
 
-### Prerequisites
+### 前提条件
 
-- Node.js 20.x or higher
-- Go 1.21 or higher
-- npm or yarn
+- Node.js 20.x 以上
+- Go 1.21 以上
+- npm または yarn
 
-### Setup Procedure
+### セットアップ手順
 
 ```bash
-# 1. Clone repository
+# 1. リポジトリクローン
 git clone https://github.com/handlename/go-ast-inspector.git
 cd go-ast-inspector
 
-# 2. Install dependencies
+# 2. 依存関係インストール
 npm install
 
-# 3. Build WASM
+# 3. WASM ビルド
 npm run build:wasm
 
-# 4. Start development server
+# 4. 開発サーバー起動
 npm run dev
 
-# 5. Open in browser
+# 5. ブラウザで開く
 # http://localhost:5173
 ```
 
-### Development Workflow
+### 開発ワークフロー
 
 ```bash
-# Code change monitoring + hot reload
+# コード変更監視 + ホットリロード
 npm run dev
 
-# Lint check
+# Lintチェック
 npm run lint
 
-# Fix formatting
+# フォーマット修正
 npm run format
 
-# Type check
+# 型チェック
 npm run type-check
 
-# Production build
+# 本番ビルド
 npm run build
 
-# Preview build result
+# ビルド結果プレビュー
 npm run preview
 ```
 
 ---
 
-## Performance Optimization
+## パフォーマンス最適化
 
-### 1. WASM Optimization
+### 1. WASM最適化
 
-- **Minimized Build**: Reduce binary size with `-ldflags="-s -w"` flag
-- **gzip Compression**: Compress WASM binary with gzip and Base64 encode
+- **最小化ビルド**: `-ldflags="-s -w"` フラグでバイナリサイズ削減
+- **gzip圧縮**: WASMバイナリをgzip圧縮してBase64エンコード
 
-### 2. UI Optimization
+### 2. UI最適化
 
-- **Svelte's Efficient Rendering**: Reactive updates redraw only necessary parts
-- **Virtual Scrolling**: Apply virtual scrolling when displaying large AST trees (consider using svelte-virtual)
-- **Lazy Rendering**: Skip rendering of collapsed nodes (implemented with Svelte conditional branching)
-- **Debounce**: Delay parse execution by 300ms on code change
+- **Svelteの効率的なレンダリング**: リアクティブな更新により必要な部分のみ再描画
+- **仮想スクロール**: 大きなASTツリーの表示時に仮想スクロール適用（svelte-virtual使用検討）
+- **遅延レンダリング**: 折りたたまれたノードは描画をスキップ（Svelte条件分岐で実装）
+- **デバウンス**: コード変更時のパース実行を300ms遅延
 
-### 3. Memory Optimization
+### 3. メモリ最適化
 
-- **Svelte's Efficient DOM Management**: Optimized DOM operations by Svelte compiler
-- **Minimize Event Listeners**: Efficient management through Svelte's event handling
-- **Store Optimization**: Avoid unnecessary calculations using derived stores
+- **Svelteの効率的なDOM管理**: Svelteコンパイラによる最適化されたDOM操作
+- **イベントリスナー最小化**: Svelteのイベントハンドリングによる効率的な管理
+- **ストアの最適化**: derived storeを活用した不要な計算の回避
 
 ---
 
-## Security Considerations
+## セキュリティ考慮事項
 
-### 1. Data Protection
+### 1. データ保護
 
-- **No LocalStorage Use**: Never save input code
-- **No Network Communication**: Complete all processing on client side
-- **XSS Protection**: Thoroughly escape user input
+- **ローカルストレージ不使用**: 入力コードを一切保存しない
+- **ネットワーク通信なし**: すべての処理をクライアントサイドで完結
+- **XSS対策**: ユーザー入力のエスケープ処理を徹底
 
 ### 2. Content Security Policy (CSP)
 
@@ -930,57 +930,57 @@ npm run preview
 
 ---
 
-## Testing Strategy
+## テスト戦略
 
-### 1. Unit Tests (Recommended)
+### 1. 単体テスト（推奨）
 
-- **Target**: 
-  - Svelte Stores (ast-store, editor-store, etc.)
-  - Core logic (ParserBridge, PositionMapper, etc.)
-  - Utility functions
-- **Tools**: Vitest (Vite-integrated test framework) + @testing-library/svelte
-- **Coverage Goal**: 70% or higher
+- **対象**: 
+  - Svelte Stores（ast-store, editor-storeなど）
+  - コアロジック（ParserBridge, PositionMapperなど）
+  - ユーティリティ関数
+- **ツール**: Vitest（Vite統合テストフレームワーク） + @testing-library/svelte
+- **カバレッジ目標**: 70%以上
 
-### 2. Integration Tests (Recommended)
+### 2. 統合テスト（推奨）
 
-- **Target**: Integration between Svelte components
-- **Tools**: @testing-library/svelte
-- **Scenarios**:
-  - Code input → Parse → AST display (CodeEditor + ASTTreeView)
-  - Tree node selection → Source code highlight (TreeNode → CodeEditor)
-  - Node click → Expand/collapse (TreeNode + expandedNodesStore)
+- **対象**: Svelteコンポーネント間の連携
+- **ツール**: @testing-library/svelte
+- **シナリオ**:
+  - コード入力 → パース → AST表示（CodeEditor + ASTTreeView）
+  - ツリーノード選択 → ソースコードハイライト（TreeNode → CodeEditor）
+  - ノードクリック → 展開/折りたたみ（TreeNode + expandedNodesStore）
 
-### 3. E2E Tests (Recommended)
+### 3. E2Eテスト（推奨）
 
-- **Tools**: Playwright
-- **Scenarios**:
-  - Page load → Display default code → Parse success
-  - Error code input → Confirm error display
-  - Browser compatibility test (Chrome, Firefox, Safari, Edge)
-
----
-
-## Future Extensibility
-
-### Phase 2 Features (Optional)
-
-1. **Multi-language Support**: Add JavaScript/TypeScript AST parsing
-2. **Export Feature**: Output AST in JSON/YAML format
-3. **Custom Themes**: Dark mode, color scheme changes
-4. **Code Formatting**: Code formatter using AST information
-5. **Diff Display**: Comparison display of two ASTs
-
-### Design Considerations for Extension
-
-- **Plugin Architecture**: Make parser replacement easy
-- **Configuration File**: Externalize user settings (when using localStorage)
-- **Module Independence**: Maintain loose coupling of each component
+- **ツール**: Playwright
+- **シナリオ**:
+  - ページロード → デフォルトコード表示 → パース成功
+  - エラーコード入力 → エラー表示確認
+  - ブラウザ互換性テスト（Chrome, Firefox, Safari, Edge）
 
 ---
 
-## Appendix
+## 将来的な拡張性
 
-### A. Reference Materials
+### Phase 2 機能（オプション）
+
+1. **複数言語対応**: JavaScript/TypeScript AST解析の追加
+2. **エクスポート機能**: JSON/YAML形式でのAST出力
+3. **カスタムテーマ**: ダークモード、カラースキーム変更
+4. **コード整形**: AST情報を利用したコードフォーマッタ
+5. **差分表示**: 2つのASTの比較表示
+
+### 拡張のための設計配慮
+
+- **プラグインアーキテクチャ**: パーサーの差し替えを容易にする
+- **設定ファイル**: ユーザー設定の外部化（localStorage使用時）
+- **モジュール独立性**: 各コンポーネントの疎結合を維持
+
+---
+
+## 付録
+
+### A. 参考資料
 
 - [Svelte Documentation](https://svelte.dev/)
 - [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
@@ -989,11 +989,11 @@ npm run preview
 - [Go WebAssembly Documentation](https://github.com/golang/go/wiki/WebAssembly)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
-### B. Glossary
+### B. 用語集
 
-| Term | Description |
-|------|-------------|
-| AST | Abstract Syntax Tree |
+| 用語 | 説明 |
+|------|------|
+| AST | Abstract Syntax Tree（抽象構文木） |
 | WASM | WebAssembly |
 | CSP | Content Security Policy |
 | HMR | Hot Module Replacement |
@@ -1001,4 +1001,4 @@ npm run preview
 
 ---
 
-**End of Document**
+**文書終了**

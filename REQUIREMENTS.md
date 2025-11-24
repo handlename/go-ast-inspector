@@ -1,386 +1,386 @@
-# Go AST Inspector - 要件定義書
+# Go AST Inspector - Requirements Specification
 
-## プロジェクト概要
+## Project Overview
 
-### 目的
-Go言語のソースコードから抽象構文木(AST: Abstract Syntax Tree)を取得し、開発者が直感的に理解できる形式で可視化するツールを提供する。
+### Purpose
+Provide a tool that retrieves the Abstract Syntax Tree (AST) from Go language source code and visualizes it in an intuitive format for developers.
 
-### 背景・コンテキスト
-- Go言語の学習やデバッグ時に、コードがどのようにパースされるかを理解することは重要
-- 既存のASTツールは開発環境のセットアップが必要であり、手軽に利用できない
-- ブラウザ上で完結するスタンドアローンなツールにより、環境構築なしで即座に利用可能にする
+### Background & Context
+- Understanding how code is parsed is crucial when learning or debugging Go language
+- Existing AST tools require development environment setup and are not easily accessible
+- A standalone tool that runs entirely in the browser enables immediate use without environment configuration
 
-### スコープ
-- **対象範囲**: Go言語のソースコードのAST解析と可視化
-- **提供形態**: 単一HTMLファイルとして配布可能なスタンドアローンツール
-- **対象ユーザー**: Go言語実務開発者（主ターゲット）、学習者、コンパイラ・言語処理系に興味がある技術者
-
----
-
-## 機能要件
-
-### FR-001: スタンドアローン動作
-**優先度**: 必須  
-**説明**: ブラウザ上で完全に動作し、外部サーバーとの通信を一切必要としない  
-**詳細**:
-- 単一のHTMLファイルとして配布可能
-- すべてのロジック（AST解析、UI制御）をクライアントサイドで実行
-- インターネット接続不要で動作
-
-**根拠**: 
-- セキュリティ上の理由でソースコードを外部送信できない環境でも利用可能
-- 環境構築の手間を排除し、即座に利用開始できる
-
-**検証基準**:
-- [ ] HTMLファイルをローカルで開いた状態で全機能が動作する
-- [ ] ネットワークトラフィックが一切発生しない（DevToolsで確認）
-- [ ] 外部CDNやリソースへの依存がない
-
-**依存関係**: なし
+### Scope
+- **Target Scope**: AST analysis and visualization of Go language source code
+- **Delivery Format**: Standalone tool distributable as a single HTML file
+- **Target Users**: Go language professional developers (primary target), learners, engineers interested in compilers and language processing systems
 
 ---
 
-### FR-002: Go言語ソースコードのAST解析
-**優先度**: 必須  
-**説明**: ユーザーが入力したGo言語のソースコードを解析し、ASTを生成する  
-**詳細**:
-- Go言語の標準文法に準拠したパーサーを使用
-- 構文エラーがある場合は適切なエラーメッセージを表示
-- 部分的なコード（式、文、関数単位）も解析可能
+## Functional Requirements
 
-**根拠**: 
-- ASTの理解には正確な解析結果が不可欠
-- 学習目的では小さなコード片の解析も重要
+### FR-001: Standalone Operation
+**Priority**: Required  
+**Description**: Operates completely in the browser without requiring any communication with external servers  
+**Details**:
+- Distributable as a single HTML file
+- Execute all logic (AST analysis, UI control) on the client side
+- Operates without internet connection
 
-**検証基準**:
-- [ ] 有効なGo言語コードを正しくASTに変換できる
-- [ ] 構文エラー時に行番号・列番号を含むエラーメッセージを表示
-- [ ] 関数定義、型宣言、式など主要な構文要素を解析できる
+**Rationale**: 
+- Can be used in environments where source code cannot be sent externally for security reasons
+- Eliminates environment setup effort and enables immediate use
 
-**依存関係**: なし
+**Verification Criteria**:
+- [ ] All features work when HTML file is opened locally
+- [ ] No network traffic occurs (confirmed via DevTools)
+- [ ] No dependencies on external CDNs or resources
 
----
-
-### FR-003: AST木構造の表示
-**優先度**: 必須  
-**説明**: 解析されたASTを階層的な木構造として視覚的に表示する  
-**詳細**:
-- ノードの種類（識別子、リテラル、演算子など）を明示
-- 親子関係が視覚的に理解できる表示形式
-- ノード選択時にそのノードの詳細情報を表示
-
-**根拠**: 
-- ASTの階層構造を理解することがツールの主目的
-- 視覚的表現により学習効果が向上
-
-**検証基準**:
-- [ ] ASTの全ノードが木構造として表示される
-- [ ] ノードタイプ（例: *ast.FuncDecl, *ast.Ident）が表示される
-- [ ] 親子関係が明確に識別できる
-
-**依存関係**: FR-002
+**Dependencies**: None
 
 ---
 
-### FR-004: ノードの展開・折りたたみ機能
-**優先度**: 必須  
-**説明**: 木構造の各ノード（枝）を個別に展開・折りたたみできる  
-**詳細**:
-- クリック操作で展開/折りたたみを切り替え
-- デフォルトの展開レベルを設定可能（例: 2階層まで展開）
-- すべて展開/すべて折りたたみ機能を提供
+### FR-002: AST Analysis of Go Language Source Code
+**Priority**: Required  
+**Description**: Parse user-input Go language source code and generate AST  
+**Details**:
+- Use a parser that conforms to Go language standard grammar
+- Display appropriate error messages when syntax errors occur
+- Can parse partial code (expressions, statements, function units)
 
-**根拠**: 
-- 大きなASTを扱う際に、必要な部分のみに集中できる
-- ユーザビリティの向上
+**Rationale**: 
+- Accurate parsing results are essential for understanding AST
+- For learning purposes, parsing small code snippets is also important
 
-**検証基準**:
-- [ ] 各ノードをクリックして展開/折りたたみできる
-- [ ] 展開状態が視覚的に識別できる（例: 矢印アイコン）
-- [ ] 全展開/全折りたたみボタンが機能する
+**Verification Criteria**:
+- [ ] Can correctly convert valid Go language code to AST
+- [ ] Display error messages including line and column numbers for syntax errors
+- [ ] Can parse major syntax elements such as function definitions, type declarations, and expressions
 
-**依存関係**: FR-003
-
----
-
-### FR-005: ソースコードとASTツリーの双方向連動表示
-**優先度**: 必須  
-**説明**: ソースコードとASTツリーの双方向連動により、両者の対応関係を視覚的に理解できるようにする  
-**詳細**:
-- **ソースコード→ASTツリー連動**:
-  - ソースコード上でクリック・カーソル移動すると、対応するASTノードをツリービューでハイライト表示
-  - 該当ノードが折りたたまれている場合は、そこまでの枝を自動展開
-  - 該当ノードまで自動スクロール
-- **ASTツリー→ソースコード連動**:
-  - ASTツリー上でノードを選択すると、対応するソースコード範囲をハイライト表示
-  - ハイライト範囲は背景色の変更により明示
-  - 該当箇所まで自動スクロール（推奨）
-- ハイライト表示の同期と解除
-
-**根拠**: 
-- ソースコードとASTの対応関係を直感的に理解できる
-- 双方向の連動により、どちらの視点からも探索可能
-- 学習効果の向上
-- ツールチップよりもツリー上での確認が視認性が高い
-
-**検証基準**:
-- [ ] ソースコード上でクリック・カーソル移動すると対応ASTノードがハイライトされる
-- [ ] ハイライト対象ノードが折りたたまれている場合、自動的に展開される
-- [ ] ASTツリー上でノードを選択すると対応ソースコード範囲がハイライトされる
-- [ ] ソースコードのハイライト範囲が視覚的に明確
-- [ ] 選択解除時にハイライトが適切に消える
-
-**依存関係**: FR-002, FR-003, FR-004
+**Dependencies**: None
 
 ---
 
-### FR-006: ソースコード入力機能
-**優先度**: 必須  
-**説明**: ユーザーがGo言語のソースコードを入力できるテキストエリアを提供  
-**詳細**:
-- 複数行のコード入力に対応
-- シンタックスハイライト表示（推奨）
-- デフォルトでHello Worldサンプルコードが入力されている
+### FR-003: AST Tree Structure Display
+**Priority**: Required  
+**Description**: Visually display the parsed AST as a hierarchical tree structure  
+**Details**:
+- Clearly show node types (identifiers, literals, operators, etc.)
+- Display format that makes parent-child relationships visually understandable
+- Display detailed information of a node when selected
 
-**根拠**: 
-- ユーザーが任意のコードを解析できることが必要
-- 初回利用時にすぐに動作を確認できる
+**Rationale**: 
+- Understanding the hierarchical structure of AST is the main purpose of the tool
+- Visual representation improves learning effectiveness
 
-**検証基準**:
-- [ ] 複数行のコードを入力できる
-- [ ] 入力後に解析ボタンまたは自動解析でASTが更新される
-- [ ] 日本語コメントを含むコードも正しく扱える
-- [ ] ページロード時にHello Worldコードが入力されている
+**Verification Criteria**:
+- [ ] All nodes of the AST are displayed as a tree structure
+- [ ] Node types (e.g., *ast.FuncDecl, *ast.Ident) are displayed
+- [ ] Parent-child relationships are clearly identifiable
 
-**依存関係**: なし
-
----
-
-## 非機能要件
-
-### NFR-001: パフォーマンス - レスポンス時間
-**優先度**: 必須  
-**説明**: 小〜中規模のコード（1000行以下）のAST解析を3秒以内に完了する  
-**測定方法**: 解析開始から結果表示までの時間を測定  
-**根拠**: ユーザー体験の維持
-
-**検証基準**:
-- [ ] 100行のコードを1秒以内に解析・表示
-- [ ] 1000行のコードを3秒以内に解析・表示
+**Dependencies**: FR-002
 
 ---
 
-### NFR-002: ブラウザ互換性
-**優先度**: 必須  
-**説明**: モダンブラウザの最新2バージョンで動作する  
-**対象ブラウザ**:
-- Google Chrome（最新2バージョン）
-- Mozilla Firefox（最新2バージョン）
-- Safari（最新2バージョン）
-- Microsoft Edge（最新2バージョン）
+### FR-004: Node Expand/Collapse Functionality
+**Priority**: Required  
+**Description**: Each node (branch) of the tree structure can be individually expanded or collapsed  
+**Details**:
+- Toggle expand/collapse with click operation
+- Configurable default expansion level (e.g., expand up to 2 levels)
+- Provide expand all/collapse all functionality
 
-**根拠**: 
-- 幅広いユーザーに提供するため
-- モダンブラウザのAPI（ES6+）を活用するため
+**Rationale**: 
+- When handling large ASTs, can focus on only necessary parts
+- Improved usability
 
-**検証基準**:
-- [ ] 上記ブラウザで全機能が正常動作する
-- [ ] レイアウト崩れがない
-- [ ] JavaScriptエラーが発生しない
+**Verification Criteria**:
+- [ ] Can expand/collapse each node by clicking
+- [ ] Expansion state is visually identifiable (e.g., arrow icon)
+- [ ] Expand all/collapse all buttons function correctly
 
----
-
-### NFR-003: ユーザビリティ - UI/UX
-**優先度**: 必須  
-**説明**: 実務開発者が直感的に操作できるUI  
-**詳細**:
-- クリーンで見やすいレイアウト
-- 操作方法が自明なUI設計
-- 簡潔な説明文・ツールチップの提供
-
-**根拠**: 
-- 実務開発者の作業効率を重視し、ツール自体の学習コストを最小化
-
-**検証基準**:
-- [ ] 初回利用時に主要機能を5分以内に理解できる
-- [ ] エラーメッセージが分かりやすい
-- [ ] デスクトップブラウザでの利用に最適化されている
+**Dependencies**: FR-003
 
 ---
 
-### NFR-004: 保守性 - コード品質
-**優先度**: 推奨  
-**説明**: 将来的な機能追加・バグ修正が容易なコード構造  
-**詳細**:
-- モジュール化された構造
-- 適切なコメント・ドキュメント
-- テストコードの整備（推奨）
+### FR-005: Bidirectional Synchronized Display Between Source Code and AST Tree
+**Priority**: Required  
+**Description**: Enable visual understanding of the correspondence between source code and AST tree through bidirectional synchronization  
+**Details**:
+- **Source Code → AST Tree Synchronization**:
+  - When clicking or moving cursor on source code, highlight the corresponding AST node in the tree view
+  - If the corresponding node is collapsed, automatically expand branches up to that node
+  - Automatically scroll to the corresponding node
+- **AST Tree → Source Code Synchronization**:
+  - When selecting a node in the AST tree, highlight the corresponding source code range
+  - Highlight range is indicated by background color change
+  - Automatically scroll to the corresponding location (recommended)
+- Synchronization and release of highlight display
 
-**根拠**: 
-- オープンソースプロジェクトとして継続的な改善を可能にする
+**Rationale**: 
+- Intuitively understand the correspondence between source code and AST
+- Bidirectional synchronization enables exploration from either perspective
+- Improved learning effectiveness
+- Visibility is higher when confirmed in the tree than with tooltips
 
-**検証基準**:
-- [ ] 主要モジュールが独立している
-- [ ] 重要な関数にコメントが記載されている
-- [ ] README.mdに使い方とアーキテクチャが記載されている
+**Verification Criteria**:
+- [ ] Clicking or moving cursor on source code highlights the corresponding AST node
+- [ ] When the highlight target node is collapsed, it is automatically expanded
+- [ ] Selecting a node in the AST tree highlights the corresponding source code range
+- [ ] Source code highlight range is visually clear
+- [ ] Highlight is properly cleared when selection is released
 
----
-
-### NFR-005: セキュリティ - データ保護
-**優先度**: 必須  
-**説明**: ユーザーの入力したコードが外部に送信されず、保存もされない  
-**詳細**:
-- すべての処理をクライアントサイドで完結
-- ローカルストレージへの保存は一切行わない
-- 入力されたコードはページリロード時に破棄される
-
-**根拠**: 
-- 企業の機密コードを扱う可能性があるため
-- セキュリティリスクを最小化する
-
-**検証基準**:
-- [ ] ネットワークリクエストが一切発生しない
-- [ ] ローカルストレージへの書き込みが一切行われない
-- [ ] ページリロード時にコードがクリアされる
+**Dependencies**: FR-002, FR-003, FR-004
 
 ---
 
-### NFR-006: 可用性 - オフライン動作
-**優先度**: 必須  
-**説明**: インターネット接続がない環境でも完全に動作する  
-**詳細**:
-- Service Workerの利用（推奨）
-- すべてのリソースをHTMLファイルに埋め込み
+### FR-006: Source Code Input Functionality
+**Priority**: Required  
+**Description**: Provide a text area where users can input Go language source code  
+**Details**:
+- Support multi-line code input
+- Syntax highlighting display (recommended)
+- Hello World sample code is input by default
 
-**根拠**: 
-- スタンドアローン動作の要件を満たすため
+**Rationale**: 
+- Users need to be able to analyze arbitrary code
+- Can immediately verify operation on first use
 
-**検証基準**:
-- [ ] オフライン環境で全機能が動作する
-- [ ] 外部リソース依存がない
+**Verification Criteria**:
+- [ ] Can input multi-line code
+- [ ] AST is updated after input via analysis button or automatic analysis
+- [ ] Code including Japanese comments is handled correctly
+- [ ] Hello World code is input when page loads
 
----
-
-## 制約条件
-
-### TC-001: 技術スタック
-- **フロントエンド**: HTML5, CSS3, TypeScript
-- **UIフレームワーク**: Svelte 5.x
-- **Go ASTパーサー**: WebAssembly版のGoパーサー
-- **ビルドツール**: Vite（単一HTMLファイル生成）
-
-### TC-002: 配布形式
-- 単一のHTMLファイルとして配布
-- ファイルサイズ: 5MB以下（推奨）
-
-### TC-003: ライセンス
-- オープンソース（MITライセンス推奨）
-- 使用する外部ライブラリもオープンソースライセンスであること
-
-### TC-004: 開発環境
-- Go言語開発環境（AST解析ロジックのテスト用）
-- モダンブラウザ（開発・テスト用）
+**Dependencies**: None
 
 ---
 
-## ステークホルダー定義
+## Non-Functional Requirements
 
-### 利用者（エンドユーザー）
-- **Go言語開発者**: コードの構造理解、デバッグ支援
-- **Go言語学習者**: 言語仕様・パーサーの学習
-- **コンパイラ/言語処理系研究者**: ASTの構造理解
+### NFR-001: Performance - Response Time
+**Priority**: Required  
+**Description**: Complete AST analysis of small to medium-scale code (1000 lines or less) within 3 seconds  
+**Measurement Method**: Measure time from analysis start to result display  
+**Rationale**: Maintain user experience
 
-**期待値**:
-- 手軽に利用開始できる（環境構築不要）
-- 正確なAST情報の取得
-- 直感的で分かりやすいUI
-
-### 開発者
-- **プロジェクト開発者**: このツールの実装・保守担当者
-
-**期待値**:
-- 保守しやすいコード構造
-- 明確な技術仕様
-- テスト可能な設計
-
-### 運用者
-- **なし**: スタンドアローンツールのため、特定の運用者は存在しない
+**Verification Criteria**:
+- [ ] Parse and display 100-line code within 1 second
+- [ ] Parse and display 1000-line code within 3 seconds
 
 ---
 
-## 要件間の依存関係
+### NFR-002: Browser Compatibility
+**Priority**: Required  
+**Description**: Operate on the latest 2 versions of modern browsers  
+**Target Browsers**:
+- Google Chrome (latest 2 versions)
+- Mozilla Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Microsoft Edge (latest 2 versions)
+
+**Rationale**: 
+- To provide to a wide range of users
+- To utilize modern browser APIs (ES6+)
+
+**Verification Criteria**:
+- [ ] All features work correctly on the above browsers
+- [ ] No layout issues
+- [ ] No JavaScript errors occur
+
+---
+
+### NFR-003: Usability - UI/UX
+**Priority**: Required  
+**Description**: UI that professional developers can operate intuitively  
+**Details**:
+- Clean and easy-to-read layout
+- Self-evident UI design for operation methods
+- Provision of concise explanatory text and tooltips
+
+**Rationale**: 
+- Prioritize work efficiency of professional developers and minimize learning cost of the tool itself
+
+**Verification Criteria**:
+- [ ] Can understand main features within 5 minutes on first use
+- [ ] Error messages are easy to understand
+- [ ] Optimized for use on desktop browsers
+
+---
+
+### NFR-004: Maintainability - Code Quality
+**Priority**: Recommended  
+**Description**: Code structure that facilitates future feature additions and bug fixes  
+**Details**:
+- Modularized structure
+- Appropriate comments and documentation
+- Test code organization (recommended)
+
+**Rationale**: 
+- Enable continuous improvement as an open-source project
+
+**Verification Criteria**:
+- [ ] Main modules are independent
+- [ ] Important functions have comments
+- [ ] README.md includes usage instructions and architecture
+
+---
+
+### NFR-005: Security - Data Protection
+**Priority**: Required  
+**Description**: User-input code is not sent externally and is not stored  
+**Details**:
+- Complete all processing on the client side
+- No storage to local storage whatsoever
+- Input code is discarded on page reload
+
+**Rationale**: 
+- May handle confidential code of companies
+- Minimize security risks
+
+**Verification Criteria**:
+- [ ] No network requests occur
+- [ ] No writes to local storage occur
+- [ ] Code is cleared on page reload
+
+---
+
+### NFR-006: Availability - Offline Operation
+**Priority**: Required  
+**Description**: Operates completely in environments without internet connection  
+**Details**:
+- Use of Service Worker (recommended)
+- Embed all resources in HTML file
+
+**Rationale**: 
+- To satisfy standalone operation requirements
+
+**Verification Criteria**:
+- [ ] All features operate in offline environment
+- [ ] No external resource dependencies
+
+---
+
+## Constraints
+
+### TC-001: Technology Stack
+- **Frontend**: HTML5, CSS3, TypeScript
+- **UI Framework**: Svelte 5.x
+- **Go AST Parser**: WebAssembly version of Go parser
+- **Build Tool**: Vite (single HTML file generation)
+
+### TC-002: Distribution Format
+- Distribute as a single HTML file
+- File size: 5MB or less (recommended)
+
+### TC-003: License
+- Open source (MIT License recommended)
+- External libraries used must also be open source licensed
+
+### TC-004: Development Environment
+- Go language development environment (for testing AST analysis logic)
+- Modern browser (for development and testing)
+
+---
+
+## Stakeholder Definition
+
+### Users (End Users)
+- **Go Language Developers**: Code structure understanding, debugging support
+- **Go Language Learners**: Learning language specifications and parsers
+- **Compiler/Language Processing System Researchers**: Understanding AST structure
+
+**Expectations**:
+- Easy to start using (no environment setup required)
+- Obtain accurate AST information
+- Intuitive and easy-to-understand UI
+
+### Developers
+- **Project Developers**: Responsible for implementation and maintenance of this tool
+
+**Expectations**:
+- Maintainable code structure
+- Clear technical specifications
+- Testable design
+
+### Operators
+- **None**: As a standalone tool, there are no specific operators
+
+---
+
+## Dependencies Between Requirements
 
 ```
-FR-002 (AST解析)
-  ├── FR-003 (木構造表示) [MVP必須]
-  │     ├── FR-004 (展開・折りたたみ) [MVP必須]
-  │     └── FR-005 (ホバー表示) [MVP必須]
+FR-002 (AST Analysis)
+  ├── FR-003 (Tree Structure Display) [MVP Required]
+  │     ├── FR-004 (Expand/Collapse) [MVP Required]
+  │     └── FR-005 (Hover Display) [MVP Required]
 
-FR-006 (入力機能) ──→ FR-002 (AST解析)
+FR-006 (Input Functionality) ──→ FR-002 (AST Analysis)
 
-FR-001 (スタンドアローン動作) ──→ すべての機能要件に影響
+FR-001 (Standalone Operation) ──→ Affects all functional requirements
 ```
 
-**MVP（最小機能プロダクト）スコープ**:
-- FR-001, FR-002, FR-003, FR-004, FR-005, FR-006 すべて必須
-- ツリー表示と連動ハイライト表示の実装は最優先
+**MVP (Minimum Viable Product) Scope**:
+- FR-001, FR-002, FR-003, FR-004, FR-005, FR-006 all required
+- Tree display and synchronized highlight display implementation are top priorities
 
 ---
 
-## 技術選定決定事項
+## Technology Selection Decisions
 
-以下の技術選定について決定されました:
+The following technology selections have been decided:
 
-### 技術スタック
-1. **GoパーサーのJavaScript実装**
-   - **決定**: WebAssembly版のGoパーサーを使用
+### Technology Stack
+1. **JavaScript Implementation of Go Parser**
+   - **Decision**: Use WebAssembly version of Go parser
 
-2. **UIフレームワーク**
-   - **決定**: Svelte 5.xを使用
+2. **UI Framework**
+   - **Decision**: Use Svelte 5.x
 
-3. **ビルドプロセス**
-   - **決定**: Viteを使用して単一HTMLファイルを生成
+3. **Build Process**
+   - **Decision**: Use Vite to generate single HTML file
 
-### 機能仕様
-4. **サンプルコードのプリセット**
-   - **決定**: Hello Worldのみ、デフォルトで入力欄に表示
+### Functional Specifications
+4. **Sample Code Preset**
+   - **Decision**: Hello World only, displayed in input field by default
 
-5. **AST表示形式**
-   - **決定**: ツリービュー形式のみをサポート
+5. **AST Display Format**
+   - **Decision**: Support tree view format only
 
-6. **エクスポート機能**
-   - **決定**: 実装しない
+6. **Export Functionality**
+   - **Decision**: Do not implement
 
-7. **ローカルストレージ利用**
-   - **決定**: 入力されたコードは一切保存しない
+7. **Local Storage Usage**
+   - **Decision**: Do not store any input code
 
-### プロジェクト管理
-8. **リリース計画**
-   - **MVP範囲**: FR-001〜FR-006すべて必須
-   - **最優先実装**: ツリー表示と連動ハイライト表示
+### Project Management
+8. **Release Plan**
+   - **MVP Scope**: FR-001 to FR-006 all required
+   - **Top Priority Implementation**: Tree display and synchronized highlight display
 
-9. **対象ユーザーの優先度**
-   - **主ターゲット**: Go言語実務開発者
+9. **Target User Priority**
+   - **Primary Target**: Go language professional developers
 
 ---
 
-## 次のステップ
+## Next Steps
 
-要件定義が完了しました。次のフェーズとして、以下のコマンド実行を推奨します:
+Requirements definition is complete. For the next phase, it is recommended to execute the following command:
 
 ```
 /prj-define-design
 ```
 
-このコマンドにより、本要件定義書をもとに技術設計書が作成され、具体的なアーキテクチャ・モジュール構成・データフロー等が明確化されます。
+This command will create a technical design document based on this requirements specification, clarifying specific architecture, module composition, data flow, etc.
 
 ---
 
-**文書バージョン**: 1.3  
-**作成日**: 2025-11-23  
-**最終更新日**: 2025-11-24  
-**更新履歴**:
-- v1.3: FR-005を双方向連動表示に拡張（ソースコードハイライト機能追加）
-- v1.2: UIフレームワークをSvelte 5.xに変更、TypeScriptを明記
-- v1.1: 技術選定決定事項の反映、エクスポート機能の削除、対象ユーザーの明確化
-- v1.0: 初版作成
+**Document Version**: 1.3  
+**Created**: 2025-11-23  
+**Last Updated**: 2025-11-24  
+**Update History**:
+- v1.3: Expanded FR-005 to bidirectional synchronized display (added source code highlight feature)
+- v1.2: Changed UI framework to Svelte 5.x, specified TypeScript
+- v1.1: Reflected technology selection decisions, removed export functionality, clarified target users
+- v1.0: Initial version created
