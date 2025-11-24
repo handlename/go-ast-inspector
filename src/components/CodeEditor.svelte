@@ -267,6 +267,27 @@
     function handleBlur() {
         selectedNodeStore.set(null);
     }
+
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Tab") {
+            event.preventDefault();
+
+            const textarea = event.target as HTMLTextAreaElement;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const value = textarea.value;
+
+            // Insert tab character at cursor position
+            const newValue =
+                value.substring(0, start) + "\t" + value.substring(end);
+            sourceCodeStore.set(newValue);
+
+            // Set cursor position after the inserted tab
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+            }, 0);
+        }
+    }
 </script>
 
 <div class="code-editor">
@@ -297,6 +318,7 @@
             value={$sourceCodeStore}
             oninput={handleInput}
             onclick={handleClick}
+            onkeydown={handleKeyDown}
             onkeyup={handleSelectionChange}
             onblur={handleBlur}
             spellcheck="false"
