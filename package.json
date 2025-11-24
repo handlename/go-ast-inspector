@@ -1,5 +1,5 @@
 {
-  "name": "go-ast-viewer",
+  "name": "go-ast-inspector",
   "version": "0.1.0",
   "description": "Browser-based Go AST viewer with standalone operation",
   "type": "module",

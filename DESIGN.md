@@ -140,7 +140,7 @@
 ### ディレクトリ構成
 
 ```
-go-ast-viewer/
+go-ast-inspector/
 ├── src/
 │   ├── main.ts                 # エントリーポイント
 │   ├── App.svelte              # ルートコンポーネント
@@ -847,8 +847,8 @@ jobs:
 
 ```bash
 # 1. リポジトリクローン
-git clone https://github.com/handlename/go-ast-viewer.git
-cd go-ast-viewer
+git clone https://github.com/handlename/go-ast-inspector.git
+cd go-ast-inspector
 
 # 2. 依存関係インストール
 npm install

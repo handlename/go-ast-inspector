@@ -14,17 +14,17 @@ Browser-based Abstract Syntax Tree (AST) viewer for Go language source code, ope
 
 ## Demo
 
-[Live Demo on GitHub Pages](https://handlename.github.io/go-ast-viewer/)
+[Live Demo on GitHub Pages](https://handlename.github.io/go-ast-inspector/)
 
 ## Usage
 
 ### Online
 
-Visit the [live demo](https://handlename.github.io/go-ast-viewer/) and start exploring Go AST immediately.
+Visit the [live demo](https://handlename.github.io/go-ast-inspector/) and start exploring Go AST immediately.
 
 ### Offline
 
-1. Download `dist/index.html` from the [releases page](https://github.com/handlename/go-ast-viewer/releases)
+1. Download `dist/index.html` from the [releases page](https://github.com/handlename/go-ast-inspector/releases)
 2. Open the file in your web browser
 3. Enter or paste Go source code into the left editor
 4. The AST tree will be displayed on the right side
@@ -62,8 +62,8 @@ The AST tree will show:
 
 ```bash
 # Clone the repository
-git clone https://github.com/handlename/go-ast-viewer.git
-cd go-ast-viewer
+git clone https://github.com/handlename/go-ast-inspector.git
+cd go-ast-inspector
 
 # Install dependencies
 npm install
@@ -87,7 +87,7 @@ npm run build
 ### Project Structure
 
 ```
-go-ast-viewer/
+go-ast-inspector/
 ├── src/
 │   ├── components/        # Svelte UI components
 │   │   ├── ASTTreeView.svelte
@@ -187,6 +187,6 @@ handlename
 
 ## Links
 
-- [GitHub Repository](https://github.com/handlename/go-ast-viewer)
-- [Issue Tracker](https://github.com/handlename/go-ast-viewer/issues)
-- [Live Demo](https://handlename.github.io/go-ast-viewer/)
+- [GitHub Repository](https://github.com/handlename/go-ast-inspector)
+- [Issue Tracker](https://github.com/handlename/go-ast-inspector/issues)
+- [Live Demo](https://handlename.github.io/go-ast-inspector/)
