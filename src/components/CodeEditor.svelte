@@ -120,7 +120,7 @@
     }
 
     // Calculate highlight rectangles using DOM measurement
-    function getHighlightRects(): DOMRect[] {
+    function getHighlightRects(scrollTop = 0, scrollLeft = 0): DOMRect[] {
         if (
             !$highlightedRangeStore ||
             !measureLayerElement ||
@@ -150,6 +150,10 @@
         // Insert HTML with marker span
         measureLayerElement.innerHTML = `<pre class="code-editor__measure-pre">${beforeText}<span id="highlight-marker">${highlightText}</span>${afterText}</pre>`;
 
+        // Sync scroll position with measure layer for accurate measurement
+        measureLayerElement.scrollTop = scrollTop;
+        measureLayerElement.scrollLeft = scrollLeft;
+
         // Get the marker span's bounding rectangles
         const marker = measureLayerElement.querySelector("#highlight-marker");
         if (!marker) {
@@ -160,18 +164,15 @@
         const clientRects = marker.getClientRects();
         const containerRect = measureLayerElement.getBoundingClientRect();
 
-        // Convert client rects to positions relative to the measure layer
+        // Convert client rects to positions relative to the viewport (not scrolled content)
+        // This way highlights stay fixed relative to the visible area
         const rects: DOMRect[] = [];
         for (let i = 0; i < clientRects.length; i++) {
             const rect = clientRects[i];
             rects.push(
                 new DOMRect(
-                    rect.left -
-                        containerRect.left +
-                        measureLayerElement.scrollLeft,
-                    rect.top -
-                        containerRect.top +
-                        measureLayerElement.scrollTop,
+                    rect.left - containerRect.left,
+                    rect.top - containerRect.top,
                     rect.width,
                     rect.height,
                 ),
@@ -191,13 +192,26 @@
         $sourceCodeStore;
 
         // Use tick to ensure DOM is updated
-        if (measureLayerElement) {
+        if (measureLayerElement && textareaElement) {
             // Delay measurement to next frame to ensure layout is complete
             requestAnimationFrame(() => {
-                highlightRects = getHighlightRects();
+                highlightRects = getHighlightRects(
+                    textareaElement?.scrollTop ?? 0,
+                    textareaElement?.scrollLeft ?? 0,
+                );
             });
         }
     });
+
+    // Update highlight positions on scroll
+    function updateHighlightOnScroll() {
+        if (measureLayerElement && textareaElement) {
+            highlightRects = getHighlightRects(
+                textareaElement.scrollTop,
+                textareaElement.scrollLeft,
+            );
+        }
+    }
 
     function handleInput(event: Event) {
         const target = event.target as HTMLTextAreaElement;
@@ -275,14 +289,9 @@
             syntaxLayerElement.scrollTop = scrollTop;
             syntaxLayerElement.scrollLeft = scrollLeft;
         }
-        if (highlightLayerElement) {
-            highlightLayerElement.scrollTop = scrollTop;
-            highlightLayerElement.scrollLeft = scrollLeft;
-        }
-        if (measureLayerElement) {
-            measureLayerElement.scrollTop = scrollTop;
-            measureLayerElement.scrollLeft = scrollLeft;
-        }
+
+        // Update highlight positions to match scroll
+        updateHighlightOnScroll();
     }
 
     function scrollToPosition(astPosition: number) {
@@ -312,10 +321,13 @@
 
         textareaElement.scrollTop = scrollTop;
 
-        // Synchronize other layers
+        // Synchronize syntax layer
         if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
-        if (highlightLayerElement) highlightLayerElement.scrollTop = scrollTop;
-        measureLayerElement.scrollTop = scrollTop;
+
+        // Update highlight positions after scroll
+        requestAnimationFrame(() => {
+            updateHighlightOnScroll();
+        });
     }
 </script>
 
@@ -461,12 +473,8 @@
         right: 0;
         bottom: 0;
         pointer-events: none;
-        overflow: auto;
+        overflow: hidden;
         z-index: 2;
-    }
-
-    .code-editor__highlight-layer::-webkit-scrollbar {
-        display: none;
     }
 
     .highlight-line {
