@@ -2,14 +2,19 @@
     import { PositionMapper } from "$lib/core/position-mapper";
     import {
         astStore,
-        selectedNodeStore,
         highlightedRangeStore,
+        selectedNodeStore,
     } from "$lib/stores/ast-store";
     import { sourceCodeStore } from "$lib/stores/editor-store";
 
+    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
     let textareaElement: HTMLTextAreaElement | undefined = $state();
+    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
     let syntaxLayerElement: HTMLDivElement | undefined = $state();
+    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
     let highlightLayerElement: HTMLDivElement | undefined = $state();
+    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
+    let measureLayerElement: HTMLDivElement | undefined = $state();
     const positionMapper = $derived(new PositionMapper($sourceCodeStore));
 
     // Go language syntax highlighting tokens
@@ -106,26 +111,21 @@
         }
     });
 
-    // タブ文字を考慮した表示幅の計算
-    function getVisualWidth(text: string, tabSize: number = 4): number {
-        let width = 0;
-        for (let i = 0; i < text.length; i++) {
-            if (text[i] === "\t") {
-                width += tabSize - (width % tabSize);
-            } else {
-                width += 1;
-            }
-        }
-        return width;
+    // Escape HTML for safe rendering in the measurement layer
+    function escapeHtml(text: string): string {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
     }
 
-    function getHighlightedLines(): Array<{
-        top: number;
-        left: number;
-        width: number;
-        height: number;
-    }> {
-        if (!$highlightedRangeStore || !textareaElement) {
+    // Calculate highlight rectangles using DOM measurement
+    function getHighlightRects(): DOMRect[] {
+        if (
+            !$highlightedRangeStore ||
+            !measureLayerElement ||
+            !syntaxLayerElement
+        ) {
             return [];
         }
 
@@ -140,94 +140,64 @@
             return [];
         }
 
-        // Calculate line height and padding from textarea styles
-        const lineHeight = 1.5 * 14; // 1.5 * 0.875rem (assuming 16px base)
-        const padding = 16; // 1rem
-        const charWidth = 8.4; // Approximate width for 0.875rem monospace
-        const tabSize = 4; // tab-size: 4 from CSS
+        // Create HTML with a span around the highlighted portion
+        const beforeText = escapeHtml(text.substring(0, startOffset));
+        const highlightText = escapeHtml(
+            text.substring(startOffset, endOffset),
+        );
+        const afterText = escapeHtml(text.substring(endOffset));
 
-        // Split text into lines
-        const allLines = text.split("\n");
-        let currentOffset = 0;
-        let startLine = 0;
-        let startCol = 0;
-        let endLine = 0;
-        let endCol = 0;
+        // Insert HTML with marker span
+        measureLayerElement.innerHTML = `<pre class="code-editor__measure-pre">${beforeText}<span id="highlight-marker">${highlightText}</span>${afterText}</pre>`;
 
-        // Find start and end line/column
-        for (let i = 0; i < allLines.length; i++) {
-            const lineLength = allLines[i].length + 1; // +1 for newline
-
-            if (currentOffset + lineLength > startOffset && startLine === 0) {
-                startLine = i;
-                startCol = startOffset - currentOffset;
-            }
-
-            if (currentOffset + lineLength > endOffset) {
-                endLine = i;
-                endCol = endOffset - currentOffset;
-                break;
-            }
-
-            currentOffset += lineLength;
+        // Get the marker span's bounding rectangles
+        const marker = measureLayerElement.querySelector("#highlight-marker");
+        if (!marker) {
+            return [];
         }
 
-        const result: Array<{
-            top: number;
-            left: number;
-            width: number;
-            height: number;
-        }> = [];
+        // Use getClientRects to get individual line rectangles (handles word wrap)
+        const clientRects = marker.getClientRects();
+        const containerRect = measureLayerElement.getBoundingClientRect();
 
-        if (startLine === endLine) {
-            // Single line highlight
-            const lineText = allLines[startLine];
-            const beforeStart = lineText.substring(0, startCol);
-            const highlightText = lineText.substring(startCol, endCol);
-
-            result.push({
-                top: padding + startLine * lineHeight,
-                left:
-                    padding + getVisualWidth(beforeStart, tabSize) * charWidth,
-                width: getVisualWidth(highlightText, tabSize) * charWidth,
-                height: lineHeight,
-            });
-        } else {
-            // First line
-            const firstLineText = allLines[startLine];
-            const beforeStart = firstLineText.substring(0, startCol);
-            const firstLineHighlight = firstLineText.substring(startCol);
-
-            result.push({
-                top: padding + startLine * lineHeight,
-                left:
-                    padding + getVisualWidth(beforeStart, tabSize) * charWidth,
-                width: getVisualWidth(firstLineHighlight, tabSize) * charWidth,
-                height: lineHeight,
-            });
-
-            // Middle lines
-            for (let i = startLine + 1; i < endLine; i++) {
-                result.push({
-                    top: padding + i * lineHeight,
-                    left: padding,
-                    width: getVisualWidth(allLines[i], tabSize) * charWidth,
-                    height: lineHeight,
-                });
-            }
-
-            // Last line
-            const lastLineHighlight = allLines[endLine].substring(0, endCol);
-            result.push({
-                top: padding + endLine * lineHeight,
-                left: padding,
-                width: getVisualWidth(lastLineHighlight, tabSize) * charWidth,
-                height: lineHeight,
-            });
+        // Convert client rects to positions relative to the measure layer
+        const rects: DOMRect[] = [];
+        for (let i = 0; i < clientRects.length; i++) {
+            const rect = clientRects[i];
+            rects.push(
+                new DOMRect(
+                    rect.left -
+                        containerRect.left +
+                        measureLayerElement.scrollLeft,
+                    rect.top -
+                        containerRect.top +
+                        measureLayerElement.scrollTop,
+                    rect.width,
+                    rect.height,
+                ),
+            );
         }
 
-        return result;
+        return rects;
     }
+
+    // Reactive state for highlight rectangles
+    let highlightRects = $state<DOMRect[]>([]);
+
+    // Update highlight rectangles when range or source code changes
+    $effect(() => {
+        // Dependencies
+        $highlightedRangeStore;
+        $sourceCodeStore;
+
+        // Use tick to ensure DOM is updated
+        if (measureLayerElement) {
+            // Delay measurement to next frame to ensure layout is complete
+            requestAnimationFrame(() => {
+                highlightRects = getHighlightRects();
+            });
+        }
+    });
 
     function handleInput(event: Event) {
         const target = event.target as HTMLTextAreaElement;
@@ -285,8 +255,7 @@
             const value = textarea.value;
 
             // Insert tab character at cursor position
-            const newValue =
-                value.substring(0, start) + "\t" + value.substring(end);
+            const newValue = `${value.substring(0, start)}\t${value.substring(end)}`;
             sourceCodeStore.set(newValue);
 
             // Set cursor position after the inserted tab
@@ -297,52 +266,56 @@
     }
 
     function handleScroll() {
-        if (!textareaElement || !syntaxLayerElement || !highlightLayerElement)
-            return;
+        if (!textareaElement) return;
 
         const scrollTop = textareaElement.scrollTop;
         const scrollLeft = textareaElement.scrollLeft;
 
-        syntaxLayerElement.scrollTop = scrollTop;
-        syntaxLayerElement.scrollLeft = scrollLeft;
-        highlightLayerElement.scrollTop = scrollTop;
-        highlightLayerElement.scrollLeft = scrollLeft;
+        if (syntaxLayerElement) {
+            syntaxLayerElement.scrollTop = scrollTop;
+            syntaxLayerElement.scrollLeft = scrollLeft;
+        }
+        if (highlightLayerElement) {
+            highlightLayerElement.scrollTop = scrollTop;
+            highlightLayerElement.scrollLeft = scrollLeft;
+        }
+        if (measureLayerElement) {
+            measureLayerElement.scrollTop = scrollTop;
+            measureLayerElement.scrollLeft = scrollLeft;
+        }
     }
 
     function scrollToPosition(astPosition: number) {
-        if (!textareaElement) return;
+        if (!textareaElement || !measureLayerElement) return;
 
         const text = $sourceCodeStore;
         const offset = Math.max(0, astPosition - 1); // AST positions are 1-based
 
-        // Calculate line number and column
-        const lines = text.split("\n");
-        let currentOffset = 0;
-        let targetLine = 0;
+        // Create a measurement element to find the actual scroll position
+        const beforeText = escapeHtml(text.substring(0, offset));
+        const afterText = escapeHtml(text.substring(offset));
+        measureLayerElement.innerHTML = `<pre class="code-editor__measure-pre">${beforeText}<span id="scroll-marker"></span>${afterText}</pre>`;
 
-        for (let i = 0; i < lines.length; i++) {
-            const lineLength = lines[i].length + 1; // +1 for newline
-            if (currentOffset + lineLength > offset) {
-                targetLine = i;
-                break;
-            }
-            currentOffset += lineLength;
-        }
+        const marker = measureLayerElement.querySelector("#scroll-marker");
+        if (!marker) return;
 
-        // Calculate scroll position
-        const lineHeight = 1.5 * 14; // 1.5 * 0.875rem (assuming 16px base)
-        const padding = 16; // 1rem
-        const targetScrollTop = targetLine * lineHeight;
+        const markerRect = marker.getBoundingClientRect();
+        const containerRect = measureLayerElement.getBoundingClientRect();
 
-        // Scroll to position with some margin
+        // Calculate the target scroll position relative to the container
+        const targetOffsetTop =
+            markerRect.top - containerRect.top + measureLayerElement.scrollTop;
+
+        // Scroll to position with some margin (show target in upper third of editor)
         const editorHeight = textareaElement.clientHeight;
-        const scrollTop = Math.max(0, targetScrollTop - editorHeight / 3);
+        const scrollTop = Math.max(0, targetOffsetTop - editorHeight / 3);
 
         textareaElement.scrollTop = scrollTop;
 
         // Synchronize other layers
         if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
         if (highlightLayerElement) highlightLayerElement.scrollTop = scrollTop;
+        measureLayerElement.scrollTop = scrollTop;
     }
 </script>
 
@@ -353,6 +326,11 @@
         </h2>
     </div>
     <div class="code-editor__wrapper">
+        <div
+            bind:this={measureLayerElement}
+            class="code-editor__measure-layer"
+            aria-hidden="true"
+        ></div>
         <div
             bind:this={syntaxLayerElement}
             class="code-editor__syntax-layer"
@@ -368,10 +346,10 @@
             aria-hidden="true"
         >
             {#if $highlightedRangeStore}
-                {#each getHighlightedLines() as line}
+                {#each highlightRects as rect}
                     <div
                         class="highlight-line"
-                        style="top: {line.top}px; left: {line.left}px; width: {line.width}px; height: {line.height}px;"
+                        style="top: {rect.y}px; left: {rect.x}px; width: {rect.width}px; height: {rect.height}px;"
                     ></div>
                 {/each}
             {/if}
@@ -419,6 +397,34 @@
         flex: 1;
         overflow: hidden;
         background-color: #fafafa;
+    }
+
+    .code-editor__measure-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        overflow: auto;
+        visibility: hidden;
+        z-index: 0;
+    }
+
+    .code-editor__measure-layer::-webkit-scrollbar {
+        display: none;
+    }
+
+    :global(.code-editor__measure-pre) {
+        margin: 0;
+        padding: 1rem;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #333;
+        tab-size: 4;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 
     .code-editor__syntax-layer {
