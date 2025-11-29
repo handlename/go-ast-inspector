@@ -1,0 +1,60 @@
+name: tagpr
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tagpr:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tagpr.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Run tagpr
+        id: tagpr
+        uses: Songmu/tagpr@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Setup Node.js
+        if: steps.tagpr.outputs.tag != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Go
+        if: steps.tagpr.outputs.tag != ''
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Install dependencies
+        if: steps.tagpr.outputs.tag != ''
+        run: npm ci
+
+      - name: Build
+        if: steps.tagpr.outputs.tag != ''
+        run: npm run build
+
+      - name: Upload release assets
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh release upload ${{ steps.tagpr.outputs.tag }} \
+            dist/index.html \
+            --clobber
+
+      - name: Publish release
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh release edit ${{ steps.tagpr.outputs.tag }} --draft=false
