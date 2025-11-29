@@ -4,6 +4,7 @@ export interface ASTNode {
   end: number;
   children: ASTNode[];
   metadata: Record<string, unknown>;
+  fieldName?: string;
 }
 
 export interface ParseResult {
