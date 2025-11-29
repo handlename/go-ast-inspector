@@ -11,6 +11,7 @@ interface Props {
 
 const { node, level, nodeId, defaultExpandLevel }: Props = $props();
 
+// biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
 let nodeElement: HTMLDivElement | undefined = $state();
 
 const isExpanded = $derived($expandedNodesStore.has(nodeId));

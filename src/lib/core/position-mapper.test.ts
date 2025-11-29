@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PositionMapper } from './position-mapper';
 import type { ASTNode } from './types';
 
@@ -12,41 +12,41 @@ func main() {
 }`;
 
   const mockAst: ASTNode = {
-    id: 'file-1',
     type: 'File',
     pos: 1,
     end: sourceCode.length + 1,
     children: [
       {
-        id: 'package-1',
         type: 'Ident',
         pos: 9,
         end: 13,
-        value: 'main',
+        children: [],
+        metadata: { name: 'main' },
       },
       {
-        id: 'import-1',
         type: 'ImportSpec',
         pos: 22,
         end: 27,
-        value: '"fmt"',
+        children: [],
+        metadata: { path: '"fmt"' },
       },
       {
-        id: 'func-1',
         type: 'FuncDecl',
         pos: 29,
         end: sourceCode.length + 1,
         children: [
           {
-            id: 'func-name',
             type: 'Ident',
             pos: 34,
             end: 38,
-            value: 'main',
+            children: [],
+            metadata: { name: 'main' },
           },
         ],
+        metadata: {},
       },
     ],
+    metadata: {},
   };
 
   describe('findNodeAtOffset', () => {
@@ -56,7 +56,7 @@ func main() {
 
       expect(node).not.toBe(null);
       expect(node?.type).toBe('Ident');
-      expect(node?.value).toBe('main');
+      expect(node?.metadata.name).toBe('main');
     });
 
     it('should return null for offset outside AST', () => {
@@ -79,7 +79,7 @@ func main() {
 
       // Should find the Ident "main" inside FuncDecl, not FuncDecl itself
       expect(node?.type).toBe('Ident');
-      expect(node?.id).toBe('func-name');
+      expect(node?.metadata.name).toBe('main');
     });
 
     it('should handle null AST', () => {
@@ -94,7 +94,7 @@ func main() {
       const node = mapper.findNodeAtOffset(mockAst, 9);
 
       expect(node?.type).toBe('Ident');
-      expect(node?.value).toBe('main');
+      expect(node?.metadata.name).toBe('main');
     });
 
     it('should find node at exact end position', () => {
@@ -102,7 +102,7 @@ func main() {
       const node = mapper.findNodeAtOffset(mockAst, 13);
 
       expect(node?.type).toBe('Ident');
-      expect(node?.value).toBe('main');
+      expect(node?.metadata.name).toBe('main');
     });
 
     it('should find import node', () => {
@@ -110,7 +110,7 @@ func main() {
       const node = mapper.findNodeAtOffset(mockAst, 24);
 
       expect(node?.type).toBe('ImportSpec');
-      expect(node?.value).toBe('"fmt"');
+      expect(node?.metadata.path).toBe('"fmt"');
     });
   });
 
@@ -118,10 +118,11 @@ func main() {
     it('should handle empty source code', () => {
       const mapper = new PositionMapper('');
       const emptyAst: ASTNode = {
-        id: 'empty',
         type: 'File',
         pos: 1,
         end: 1,
+        children: [],
+        metadata: {},
       };
 
       const node = mapper.findNodeAtOffset(emptyAst, 1);
@@ -131,15 +132,15 @@ func main() {
     it('should handle AST with no children', () => {
       const mapper = new PositionMapper(sourceCode);
       const leafNode: ASTNode = {
-        id: 'leaf',
         type: 'Ident',
         pos: 1,
         end: 10,
-        value: 'test',
+        children: [],
+        metadata: { name: 'test' },
       };
 
       const node = mapper.findNodeAtOffset(leafNode, 5);
-      expect(node?.id).toBe('leaf');
+      expect(node?.type).toBe('Ident');
     });
 
     it('should handle offset at boundary between nodes', () => {

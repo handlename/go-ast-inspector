@@ -1,234 +1,207 @@
 <script lang="ts">
-    import { PositionMapper } from "$lib/core/position-mapper";
-    import {
-        astStore,
-        highlightedRangeStore,
-        selectedNodeStore,
-    } from "$lib/stores/ast-store";
-    import { sourceCodeStore } from "$lib/stores/editor-store";
+import { PositionMapper } from '$lib/core/position-mapper';
+import { astStore, highlightedRangeStore, selectedNodeStore } from '$lib/stores/ast-store';
+import { sourceCodeStore } from '$lib/stores/editor-store';
 
-    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
-    let textareaElement: HTMLTextAreaElement | undefined = $state();
-    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
-    let syntaxLayerElement: HTMLDivElement | undefined = $state();
-    const positionMapper = $derived(new PositionMapper($sourceCodeStore));
+// biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
+let textareaElement: HTMLTextAreaElement | undefined = $state();
+// biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
+let syntaxLayerElement: HTMLDivElement | undefined = $state();
+const positionMapper = $derived(new PositionMapper($sourceCodeStore));
 
-    // Go language syntax highlighting tokens
-    const GO_KEYWORDS =
-        /\b(break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|map|package|range|return|select|struct|switch|type|var)\b/g;
-    const GO_TYPES =
-        /\b(bool|byte|complex64|complex128|error|float32|float64|int|int8|int16|int32|int64|rune|string|uint|uint8|uint16|uint32|uint64|uintptr)\b/g;
-    const GO_LITERALS = /\b(true|false|nil|iota)\b/g;
-    const GO_STRINGS = /"(?:[^"\\]|\\.)*"|`[^`]*`/g;
-    const GO_COMMENTS = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
-    const GO_NUMBERS = /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g;
+// Go language syntax highlighting tokens
+const GO_KEYWORDS =
+  /\b(break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|map|package|range|return|select|struct|switch|type|var)\b/g;
+const GO_TYPES =
+  /\b(bool|byte|complex64|complex128|error|float32|float64|int|int8|int16|int32|int64|rune|string|uint|uint8|uint16|uint32|uint64|uintptr)\b/g;
+const GO_LITERALS = /\b(true|false|nil|iota)\b/g;
+const GO_STRINGS = /"(?:[^"\\]|\\.)*"|`[^`]*`/g;
+const GO_COMMENTS = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+const GO_NUMBERS = /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g;
 
-    function escapeHtml(text: string): string {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-    }
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-    function applySyntaxHighlighting(escapedCode: string): string {
-        if (!escapedCode) return "";
+function applySyntaxHighlighting(escapedCode: string): string {
+  if (!escapedCode) return '';
 
-        let highlighted = escapedCode;
+  let highlighted = escapedCode;
 
-        const markers: Array<{ placeholder: string; replacement: string }> = [];
-        let markerIndex = 0;
+  const markers: Array<{ placeholder: string; replacement: string }> = [];
+  let markerIndex = 0;
 
-        function createMarker(match: string, className: string): string {
-            const placeholder = `___MARKER_${markerIndex}___`;
-            markers.push({
-                placeholder,
-                replacement: `<span class="${className}">${match}</span>`,
-            });
-            markerIndex++;
-            return placeholder;
-        }
+  function createMarker(match: string, className: string): string {
+    const placeholder = `___MARKER_${markerIndex}___`;
+    markers.push({
+      placeholder,
+      replacement: `<span class="${className}">${match}</span>`,
+    });
+    markerIndex++;
+    return placeholder;
+  }
 
-        highlighted = highlighted.replace(GO_COMMENTS, (match) =>
-            createMarker(match, "token-comment"),
-        );
-        highlighted = highlighted.replace(GO_STRINGS, (match) =>
-            createMarker(match, "token-string"),
-        );
-        highlighted = highlighted.replace(GO_KEYWORDS, (match) =>
-            createMarker(match, "token-keyword"),
-        );
-        highlighted = highlighted.replace(GO_TYPES, (match) =>
-            createMarker(match, "token-type"),
-        );
-        highlighted = highlighted.replace(GO_LITERALS, (match) =>
-            createMarker(match, "token-literal"),
-        );
-        highlighted = highlighted.replace(GO_NUMBERS, (match) =>
-            createMarker(match, "token-number"),
-        );
+  highlighted = highlighted.replace(GO_COMMENTS, (match) => createMarker(match, 'token-comment'));
+  highlighted = highlighted.replace(GO_STRINGS, (match) => createMarker(match, 'token-string'));
+  highlighted = highlighted.replace(GO_KEYWORDS, (match) => createMarker(match, 'token-keyword'));
+  highlighted = highlighted.replace(GO_TYPES, (match) => createMarker(match, 'token-type'));
+  highlighted = highlighted.replace(GO_LITERALS, (match) => createMarker(match, 'token-literal'));
+  highlighted = highlighted.replace(GO_NUMBERS, (match) => createMarker(match, 'token-number'));
 
-        for (const marker of markers) {
-            highlighted = highlighted.replace(
-                marker.placeholder,
-                marker.replacement,
-            );
-        }
+  for (const marker of markers) {
+    highlighted = highlighted.replace(marker.placeholder, marker.replacement);
+  }
 
-        return highlighted;
-    }
+  return highlighted;
+}
 
-    // Generate code with inline selection highlight embedded in syntax highlighting
-    function generateHighlightedCode(
-        code: string,
-        range: { start: number; end: number } | null,
-    ): string {
-        if (!code) return "";
+// Generate code with inline selection highlight embedded in syntax highlighting
+function generateHighlightedCode(
+  code: string,
+  range: { start: number; end: number } | null,
+): string {
+  if (!code) return '';
 
-        // If no range, just return syntax highlighted code
-        if (!range) {
-            return applySyntaxHighlighting(escapeHtml(code));
-        }
+  // If no range, just return syntax highlighted code
+  if (!range) {
+    return applySyntaxHighlighting(escapeHtml(code));
+  }
 
-        // AST positions are 1-based, convert to 0-based
-        const startOffset = Math.max(0, range.start - 1);
-        const endOffset = Math.min(code.length, range.end - 1);
+  // AST positions are 1-based, convert to 0-based
+  const startOffset = Math.max(0, range.start - 1);
+  const endOffset = Math.min(code.length, range.end - 1);
 
-        if (startOffset >= endOffset) {
-            return applySyntaxHighlighting(escapeHtml(code));
-        }
+  if (startOffset >= endOffset) {
+    return applySyntaxHighlighting(escapeHtml(code));
+  }
 
-        // Split code into three parts and escape each
-        const beforeText = escapeHtml(code.substring(0, startOffset));
-        const highlightText = escapeHtml(code.substring(startOffset, endOffset));
-        const afterText = escapeHtml(code.substring(endOffset));
+  // Split code into three parts and escape each
+  const beforeText = escapeHtml(code.substring(0, startOffset));
+  const highlightText = escapeHtml(code.substring(startOffset, endOffset));
+  const afterText = escapeHtml(code.substring(endOffset));
 
-        // Apply syntax highlighting to each part
-        const beforeHighlighted = applySyntaxHighlighting(beforeText);
-        const highlightedPart = applySyntaxHighlighting(highlightText);
-        const afterHighlighted = applySyntaxHighlighting(afterText);
+  // Apply syntax highlighting to each part
+  const beforeHighlighted = applySyntaxHighlighting(beforeText);
+  const highlightedPart = applySyntaxHighlighting(highlightText);
+  const afterHighlighted = applySyntaxHighlighting(afterText);
 
-        // Wrap the highlighted portion with a mark element
-        return `${beforeHighlighted}<mark class="code-highlight">${highlightedPart}</mark>${afterHighlighted}`;
-    }
+  // Wrap the highlighted portion with a mark element
+  return `${beforeHighlighted}<mark class="code-highlight">${highlightedPart}</mark>${afterHighlighted}`;
+}
 
-    const renderedCode = $derived(
-        generateHighlightedCode($sourceCodeStore, $highlightedRangeStore),
-    );
+const renderedCode = $derived(generateHighlightedCode($sourceCodeStore, $highlightedRangeStore));
 
-    // Watch for AST tree selection and set highlight range, scroll editor
-    $effect(() => {
-        if ($selectedNodeStore) {
-            highlightedRangeStore.set({
-                start: $selectedNodeStore.pos,
-                end: $selectedNodeStore.end,
-            });
-
-            if (textareaElement) {
-                scrollToPosition($selectedNodeStore.pos);
-            }
-        } else {
-            highlightedRangeStore.set(null);
-        }
+// Watch for AST tree selection and set highlight range, scroll editor
+$effect(() => {
+  if ($selectedNodeStore) {
+    highlightedRangeStore.set({
+      start: $selectedNodeStore.pos,
+      end: $selectedNodeStore.end,
     });
 
-    function handleInput(event: Event) {
-        const target = event.target as HTMLTextAreaElement;
-        sourceCodeStore.set(target.value);
+    if (textareaElement) {
+      scrollToPosition($selectedNodeStore.pos);
+    }
+  } else {
+    highlightedRangeStore.set(null);
+  }
+});
+
+function handleInput(event: Event) {
+  const target = event.target as HTMLTextAreaElement;
+  sourceCodeStore.set(target.value);
+}
+
+function handleClick() {
+  if (!textareaElement) return;
+
+  const textarea = textareaElement;
+
+  setTimeout(() => {
+    const cursorPos = textarea.selectionStart;
+
+    if (cursorPos === undefined || cursorPos < 0) {
+      selectedNodeStore.set(null);
+      return;
     }
 
-    function handleClick() {
-        if (!textareaElement) return;
+    const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
+    selectedNodeStore.set(node);
+  }, 0);
+}
 
-        const textarea = textareaElement;
+function handleSelectionChange() {
+  if (!textareaElement) return;
 
-        setTimeout(() => {
-            const cursorPos = textarea.selectionStart;
+  const textarea = textareaElement;
+  const cursorPos = textarea.selectionStart;
 
-            if (cursorPos === undefined || cursorPos < 0) {
-                selectedNodeStore.set(null);
-                return;
-            }
+  if (cursorPos === undefined || cursorPos < 0) {
+    selectedNodeStore.set(null);
+    return;
+  }
 
-            const node = positionMapper.findNodeAtOffset(
-                $astStore,
-                cursorPos + 1,
-            );
-            selectedNodeStore.set(node);
-        }, 0);
+  const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
+  selectedNodeStore.set(node);
+}
+
+function handleBlur() {
+  selectedNodeStore.set(null);
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Tab') {
+    event.preventDefault();
+
+    const textarea = event.target as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+
+    const newValue = `${value.substring(0, start)}\t${value.substring(end)}`;
+    sourceCodeStore.set(newValue);
+
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 1;
+    }, 0);
+  }
+}
+
+function handleScroll() {
+  if (!textareaElement || !syntaxLayerElement) return;
+
+  syntaxLayerElement.scrollTop = textareaElement.scrollTop;
+  syntaxLayerElement.scrollLeft = textareaElement.scrollLeft;
+}
+
+function scrollToPosition(astPosition: number) {
+  if (!textareaElement) return;
+
+  const text = $sourceCodeStore;
+  const offset = Math.max(0, astPosition - 1);
+
+  const lines = text.split('\n');
+  let currentOffset = 0;
+  let targetLine = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineLength = lines[i].length + 1;
+    if (currentOffset + lineLength > offset) {
+      targetLine = i;
+      break;
     }
+    currentOffset += lineLength;
+  }
 
-    function handleSelectionChange() {
-        if (!textareaElement) return;
+  const lineHeight = 1.5 * 14;
+  const targetScrollTop = targetLine * lineHeight;
 
-        const textarea = textareaElement;
-        const cursorPos = textarea.selectionStart;
+  const editorHeight = textareaElement.clientHeight;
+  const scrollTop = Math.max(0, targetScrollTop - editorHeight / 3);
 
-        if (cursorPos === undefined || cursorPos < 0) {
-            selectedNodeStore.set(null);
-            return;
-        }
-
-        const node = positionMapper.findNodeAtOffset($astStore, cursorPos + 1);
-        selectedNodeStore.set(node);
-    }
-
-    function handleBlur() {
-        selectedNodeStore.set(null);
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-        if (event.key === "Tab") {
-            event.preventDefault();
-
-            const textarea = event.target as HTMLTextAreaElement;
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const value = textarea.value;
-
-            const newValue = `${value.substring(0, start)}\t${value.substring(end)}`;
-            sourceCodeStore.set(newValue);
-
-            setTimeout(() => {
-                textarea.selectionStart = textarea.selectionEnd = start + 1;
-            }, 0);
-        }
-    }
-
-    function handleScroll() {
-        if (!textareaElement || !syntaxLayerElement) return;
-
-        syntaxLayerElement.scrollTop = textareaElement.scrollTop;
-        syntaxLayerElement.scrollLeft = textareaElement.scrollLeft;
-    }
-
-    function scrollToPosition(astPosition: number) {
-        if (!textareaElement) return;
-
-        const text = $sourceCodeStore;
-        const offset = Math.max(0, astPosition - 1);
-
-        const lines = text.split("\n");
-        let currentOffset = 0;
-        let targetLine = 0;
-
-        for (let i = 0; i < lines.length; i++) {
-            const lineLength = lines[i].length + 1;
-            if (currentOffset + lineLength > offset) {
-                targetLine = i;
-                break;
-            }
-            currentOffset += lineLength;
-        }
-
-        const lineHeight = 1.5 * 14;
-        const targetScrollTop = targetLine * lineHeight;
-
-        const editorHeight = textareaElement.clientHeight;
-        const scrollTop = Math.max(0, targetScrollTop - editorHeight / 3);
-
-        textareaElement.scrollTop = scrollTop;
-        if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
-    }
+  textareaElement.scrollTop = scrollTop;
+  if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
+}
 </script>
 
 <div class="code-editor">
