@@ -4,3 +4,4 @@
     vPrefix = true
     release = draft
     changelog = true
+    command = ./scripts/update-version.sh
