@@ -38,14 +38,6 @@ Before working on the project, please refer to the following documents:
   - Build Configuration (Vite, TypeScript, Biome, Svelte)
   - Data Flow Design
 
-### 3. [TASKS.md](./TASKS.md)
-- **Contents**: Task definition document
-- **Reference Timing**: When executing implementation tasks
-- **Key Sections**:
-  - Task definitions for Phases 1-8
-  - Purpose, details, and completion criteria for each task
-  - Recommended task execution order
-
 ---
 
 ## Before Starting Work
@@ -62,18 +54,12 @@ Before working on the project, please refer to the following documents:
    - Check directory structure
    - Understand state management design using Svelte Store
 
-3. **Check current phase in TASKS.md**
-   - Identify tasks to execute
-   - Check task dependencies
-
 ### Recommended Workflow
 
 ```
 1. REQUIREMENTS.md → Project Understanding
 2. DESIGN.md → Architecture and Technical Specification Understanding
-3. TASKS.md → Implementation Task Confirmation
-4. Implementation → Implement according to design
-5. Completion Criteria Check → Check TASKS.md completion criteria
+3. Implementation → Implement according to design
 ```
 
 ---
@@ -122,7 +108,9 @@ Before working on the project, please refer to the following documents:
 - MUST convention: Prohibit redundant comments (no explanation needed for simple operations)
 - SHOULD convention: Write comments where code intent is hard to convey
 
-### Commit
+### Commit and Pull Request
+- MUST convention: Write commit messages in English
+- MUST convention: Write Pull Request titles and descriptions in English
 - MUST convention: Add GPG sign to all commits
 - MUST convention: Add Claude as Co-Author:
   ```
@@ -145,14 +133,14 @@ A: Only for Go language AST analysis. Use go/parser to convert source code to AS
 A: Using Vite's vite-plugin-singlefile. All JS/CSS/WASM binaries are inlined.
 
 ### Q: Are tests mandatory?
-A: Phase 7 (Recommended) in TASKS.md. Not included in MVP, but recommended for quality assurance.
+A: Not included in MVP, but recommended for quality assurance.
 
 ---
 
 ## Troubleshooting
 
 ### If you find contradictions between documents
-1. Priority order: REQUIREMENTS.md > DESIGN.md > TASKS.md
+1. Priority order: REQUIREMENTS.md > DESIGN.md
 2. Report contradictions to user and request confirmation
 
 ### If there are unclear specifications
@@ -177,5 +165,5 @@ A: Phase 7 (Recommended) in TASKS.md. Not included in MVP, but recommended for q
 
 ---
 
-**Last Updated**: 2025-11-23  
-**Version**: 1.0
+**Last Updated**: 2025-11-29  
+**Version**: 1.1
