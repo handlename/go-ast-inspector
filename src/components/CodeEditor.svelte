@@ -11,10 +11,6 @@
     let textareaElement: HTMLTextAreaElement | undefined = $state();
     // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
     let syntaxLayerElement: HTMLDivElement | undefined = $state();
-    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
-    let highlightLayerElement: HTMLDivElement | undefined = $state();
-    // biome-ignore lint/style/useConst: Svelte $state() requires let for bind:this
-    let measureLayerElement: HTMLDivElement | undefined = $state();
     const positionMapper = $derived(new PositionMapper($sourceCodeStore));
 
     // Go language syntax highlighting tokens
@@ -27,20 +23,21 @@
     const GO_COMMENTS = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
     const GO_NUMBERS = /\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g;
 
-    function highlightSyntax(code: string): string {
-        if (!code) return "";
-
-        // First escape HTML
-        let highlighted = code
+    function escapeHtml(text: string): string {
+        return text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
+    }
 
-        // Create a temporary marker system to avoid conflicts
+    function applySyntaxHighlighting(escapedCode: string): string {
+        if (!escapedCode) return "";
+
+        let highlighted = escapedCode;
+
         const markers: Array<{ placeholder: string; replacement: string }> = [];
         let markerIndex = 0;
 
-        // Helper function to create temporary markers
         function createMarker(match: string, className: string): string {
             const placeholder = `___MARKER_${markerIndex}___`;
             markers.push({
@@ -51,37 +48,25 @@
             return placeholder;
         }
 
-        // Comments (must be first to avoid highlighting inside comments)
         highlighted = highlighted.replace(GO_COMMENTS, (match) =>
             createMarker(match, "token-comment"),
         );
-
-        // Strings
         highlighted = highlighted.replace(GO_STRINGS, (match) =>
             createMarker(match, "token-string"),
         );
-
-        // Keywords
         highlighted = highlighted.replace(GO_KEYWORDS, (match) =>
             createMarker(match, "token-keyword"),
         );
-
-        // Types
         highlighted = highlighted.replace(GO_TYPES, (match) =>
             createMarker(match, "token-type"),
         );
-
-        // Literals
         highlighted = highlighted.replace(GO_LITERALS, (match) =>
             createMarker(match, "token-literal"),
         );
-
-        // Numbers
         highlighted = highlighted.replace(GO_NUMBERS, (match) =>
             createMarker(match, "token-number"),
         );
 
-        // Replace all markers with actual HTML
         for (const marker of markers) {
             highlighted = highlighted.replace(
                 marker.placeholder,
@@ -92,9 +77,45 @@
         return highlighted;
     }
 
-    const highlightedCode = $derived(highlightSyntax($sourceCodeStore));
+    // Generate code with inline selection highlight embedded in syntax highlighting
+    function generateHighlightedCode(
+        code: string,
+        range: { start: number; end: number } | null,
+    ): string {
+        if (!code) return "";
 
-    // ASTツリーからの選択を監視してハイライト範囲を設定し、エディタをスクロール
+        // If no range, just return syntax highlighted code
+        if (!range) {
+            return applySyntaxHighlighting(escapeHtml(code));
+        }
+
+        // AST positions are 1-based, convert to 0-based
+        const startOffset = Math.max(0, range.start - 1);
+        const endOffset = Math.min(code.length, range.end - 1);
+
+        if (startOffset >= endOffset) {
+            return applySyntaxHighlighting(escapeHtml(code));
+        }
+
+        // Split code into three parts and escape each
+        const beforeText = escapeHtml(code.substring(0, startOffset));
+        const highlightText = escapeHtml(code.substring(startOffset, endOffset));
+        const afterText = escapeHtml(code.substring(endOffset));
+
+        // Apply syntax highlighting to each part
+        const beforeHighlighted = applySyntaxHighlighting(beforeText);
+        const highlightedPart = applySyntaxHighlighting(highlightText);
+        const afterHighlighted = applySyntaxHighlighting(afterText);
+
+        // Wrap the highlighted portion with a mark element
+        return `${beforeHighlighted}<mark class="code-highlight">${highlightedPart}</mark>${afterHighlighted}`;
+    }
+
+    const renderedCode = $derived(
+        generateHighlightedCode($sourceCodeStore, $highlightedRangeStore),
+    );
+
+    // Watch for AST tree selection and set highlight range, scroll editor
     $effect(() => {
         if ($selectedNodeStore) {
             highlightedRangeStore.set({
@@ -102,7 +123,6 @@
                 end: $selectedNodeStore.end,
             });
 
-            // Scroll editor to the selected node position
             if (textareaElement) {
                 scrollToPosition($selectedNodeStore.pos);
             }
@@ -110,108 +130,6 @@
             highlightedRangeStore.set(null);
         }
     });
-
-    // Escape HTML for safe rendering in the measurement layer
-    function escapeHtml(text: string): string {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-    }
-
-    // Calculate highlight rectangles using DOM measurement
-    function getHighlightRects(scrollTop = 0, scrollLeft = 0): DOMRect[] {
-        if (
-            !$highlightedRangeStore ||
-            !measureLayerElement ||
-            !syntaxLayerElement
-        ) {
-            return [];
-        }
-
-        const { start, end } = $highlightedRangeStore;
-        const text = $sourceCodeStore;
-
-        // AST positions are 1-based, convert to 0-based
-        const startOffset = Math.max(0, start - 1);
-        const endOffset = Math.min(text.length, end - 1);
-
-        if (startOffset >= endOffset) {
-            return [];
-        }
-
-        // Create HTML with a span around the highlighted portion
-        const beforeText = escapeHtml(text.substring(0, startOffset));
-        const highlightText = escapeHtml(
-            text.substring(startOffset, endOffset),
-        );
-        const afterText = escapeHtml(text.substring(endOffset));
-
-        // Insert HTML with marker span
-        measureLayerElement.innerHTML = `<pre class="code-editor__measure-pre">${beforeText}<span id="highlight-marker">${highlightText}</span>${afterText}</pre>`;
-
-        // Sync scroll position with measure layer for accurate measurement
-        measureLayerElement.scrollTop = scrollTop;
-        measureLayerElement.scrollLeft = scrollLeft;
-
-        // Get the marker span's bounding rectangles
-        const marker = measureLayerElement.querySelector("#highlight-marker");
-        if (!marker) {
-            return [];
-        }
-
-        // Use getClientRects to get individual line rectangles (handles word wrap)
-        const clientRects = marker.getClientRects();
-        const containerRect = measureLayerElement.getBoundingClientRect();
-
-        // Convert client rects to positions relative to the viewport (not scrolled content)
-        // This way highlights stay fixed relative to the visible area
-        const rects: DOMRect[] = [];
-        for (let i = 0; i < clientRects.length; i++) {
-            const rect = clientRects[i];
-            rects.push(
-                new DOMRect(
-                    rect.left - containerRect.left,
-                    rect.top - containerRect.top,
-                    rect.width,
-                    rect.height,
-                ),
-            );
-        }
-
-        return rects;
-    }
-
-    // Reactive state for highlight rectangles
-    let highlightRects = $state<DOMRect[]>([]);
-
-    // Update highlight rectangles when range or source code changes
-    $effect(() => {
-        // Dependencies
-        $highlightedRangeStore;
-        $sourceCodeStore;
-
-        // Use tick to ensure DOM is updated
-        if (measureLayerElement && textareaElement) {
-            // Delay measurement to next frame to ensure layout is complete
-            requestAnimationFrame(() => {
-                highlightRects = getHighlightRects(
-                    textareaElement?.scrollTop ?? 0,
-                    textareaElement?.scrollLeft ?? 0,
-                );
-            });
-        }
-    });
-
-    // Update highlight positions on scroll
-    function updateHighlightOnScroll() {
-        if (measureLayerElement && textareaElement) {
-            highlightRects = getHighlightRects(
-                textareaElement.scrollTop,
-                textareaElement.scrollLeft,
-            );
-        }
-    }
 
     function handleInput(event: Event) {
         const target = event.target as HTMLTextAreaElement;
@@ -223,7 +141,6 @@
 
         const textarea = textareaElement;
 
-        // Get cursor position after click
         setTimeout(() => {
             const cursorPos = textarea.selectionStart;
 
@@ -235,7 +152,7 @@
             const node = positionMapper.findNodeAtOffset(
                 $astStore,
                 cursorPos + 1,
-            ); // AST positions are 1-based
+            );
             selectedNodeStore.set(node);
         }, 0);
     }
@@ -268,11 +185,9 @@
             const end = textarea.selectionEnd;
             const value = textarea.value;
 
-            // Insert tab character at cursor position
             const newValue = `${value.substring(0, start)}\t${value.substring(end)}`;
             sourceCodeStore.set(newValue);
 
-            // Set cursor position after the inserted tab
             setTimeout(() => {
                 textarea.selectionStart = textarea.selectionEnd = start + 1;
             }, 0);
@@ -280,54 +195,39 @@
     }
 
     function handleScroll() {
-        if (!textareaElement) return;
+        if (!textareaElement || !syntaxLayerElement) return;
 
-        const scrollTop = textareaElement.scrollTop;
-        const scrollLeft = textareaElement.scrollLeft;
-
-        if (syntaxLayerElement) {
-            syntaxLayerElement.scrollTop = scrollTop;
-            syntaxLayerElement.scrollLeft = scrollLeft;
-        }
-
-        // Update highlight positions to match scroll
-        updateHighlightOnScroll();
+        syntaxLayerElement.scrollTop = textareaElement.scrollTop;
+        syntaxLayerElement.scrollLeft = textareaElement.scrollLeft;
     }
 
     function scrollToPosition(astPosition: number) {
-        if (!textareaElement || !measureLayerElement) return;
+        if (!textareaElement) return;
 
         const text = $sourceCodeStore;
-        const offset = Math.max(0, astPosition - 1); // AST positions are 1-based
+        const offset = Math.max(0, astPosition - 1);
 
-        // Create a measurement element to find the actual scroll position
-        const beforeText = escapeHtml(text.substring(0, offset));
-        const afterText = escapeHtml(text.substring(offset));
-        measureLayerElement.innerHTML = `<pre class="code-editor__measure-pre">${beforeText}<span id="scroll-marker"></span>${afterText}</pre>`;
+        const lines = text.split("\n");
+        let currentOffset = 0;
+        let targetLine = 0;
 
-        const marker = measureLayerElement.querySelector("#scroll-marker");
-        if (!marker) return;
+        for (let i = 0; i < lines.length; i++) {
+            const lineLength = lines[i].length + 1;
+            if (currentOffset + lineLength > offset) {
+                targetLine = i;
+                break;
+            }
+            currentOffset += lineLength;
+        }
 
-        const markerRect = marker.getBoundingClientRect();
-        const containerRect = measureLayerElement.getBoundingClientRect();
+        const lineHeight = 1.5 * 14;
+        const targetScrollTop = targetLine * lineHeight;
 
-        // Calculate the target scroll position relative to the container
-        const targetOffsetTop =
-            markerRect.top - containerRect.top + measureLayerElement.scrollTop;
-
-        // Scroll to position with some margin (show target in upper third of editor)
         const editorHeight = textareaElement.clientHeight;
-        const scrollTop = Math.max(0, targetOffsetTop - editorHeight / 3);
+        const scrollTop = Math.max(0, targetScrollTop - editorHeight / 3);
 
         textareaElement.scrollTop = scrollTop;
-
-        // Synchronize syntax layer
         if (syntaxLayerElement) syntaxLayerElement.scrollTop = scrollTop;
-
-        // Update highlight positions after scroll
-        requestAnimationFrame(() => {
-            updateHighlightOnScroll();
-        });
     }
 </script>
 
@@ -339,32 +239,13 @@
     </div>
     <div class="code-editor__wrapper">
         <div
-            bind:this={measureLayerElement}
-            class="code-editor__measure-layer"
-            aria-hidden="true"
-        ></div>
-        <div
             bind:this={syntaxLayerElement}
             class="code-editor__syntax-layer"
             aria-hidden="true"
         >
             <pre class="code-editor__syntax-pre"><code
-                    >{@html highlightedCode}</code
+                    >{@html renderedCode}</code
                 ></pre>
-        </div>
-        <div
-            bind:this={highlightLayerElement}
-            class="code-editor__highlight-layer"
-            aria-hidden="true"
-        >
-            {#if $highlightedRangeStore}
-                {#each highlightRects as rect}
-                    <div
-                        class="highlight-line"
-                        style="top: {rect.y}px; left: {rect.x}px; width: {rect.width}px; height: {rect.height}px;"
-                    ></div>
-                {/each}
-            {/if}
         </div>
         <textarea
             bind:this={textareaElement}
@@ -411,34 +292,6 @@
         background-color: #fafafa;
     }
 
-    .code-editor__measure-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        pointer-events: none;
-        overflow: auto;
-        visibility: hidden;
-        z-index: 0;
-    }
-
-    .code-editor__measure-layer::-webkit-scrollbar {
-        display: none;
-    }
-
-    :global(.code-editor__measure-pre) {
-        margin: 0;
-        padding: 1rem;
-        font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        color: #333;
-        tab-size: 4;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
     .code-editor__syntax-layer {
         position: absolute;
         top: 0;
@@ -446,7 +299,7 @@
         right: 0;
         bottom: 0;
         pointer-events: none;
-        overflow: auto;
+        overflow: hidden;
         z-index: 1;
     }
 
@@ -457,30 +310,15 @@
     .code-editor__syntax-pre {
         margin: 0;
         padding: 1rem;
+        box-sizing: border-box;
         font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
         font-size: 0.875rem;
         line-height: 1.5;
         color: #333;
         tab-size: 4;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .code-editor__highlight-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        pointer-events: none;
-        overflow: hidden;
-        z-index: 2;
-    }
-
-    .highlight-line {
-        position: absolute;
-        background-color: rgba(255, 235, 59, 0.3);
-        border-radius: 2px;
+        white-space: pre;
+        min-width: 100%;
+        width: max-content;
     }
 
     .code-editor__textarea {
@@ -492,6 +330,7 @@
         width: 100%;
         height: 100%;
         padding: 1rem;
+        box-sizing: border-box;
         font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
         font-size: 0.875rem;
         line-height: 1.5;
@@ -502,7 +341,17 @@
         color: transparent;
         caret-color: #333;
         tab-size: 4;
-        z-index: 3;
+        white-space: pre;
+        z-index: 2;
+    }
+
+    .code-editor__textarea::-webkit-scrollbar {
+        display: none;
+    }
+
+    .code-editor__textarea {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 
     .code-editor__textarea::placeholder {
@@ -511,6 +360,12 @@
 
     .code-editor__textarea::selection {
         background-color: rgba(0, 123, 255, 0.3);
+    }
+
+    /* Inline highlight style */
+    :global(.code-editor__syntax-pre .code-highlight) {
+        background-color: rgba(255, 235, 59, 0.4);
+        border-radius: 2px;
     }
 
     /* Syntax highlighting colors */
