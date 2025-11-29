@@ -139,6 +139,9 @@ $effect(() => {
             <span class="tree-node__spacer"></span>
         {/if}
 
+        {#if node.fieldName}
+            <span class="tree-node__field-name">{node.fieldName}</span>
+        {/if}
         <span class="tree-node__type">{node.type}</span>
 
         {#if metadataStr}
@@ -209,6 +212,16 @@ $effect(() => {
         display: inline-block;
         width: 1.25rem;
         margin-right: 0.25rem;
+    }
+
+    .tree-node__field-name {
+        color: #8e44ad;
+        font-weight: 500;
+        margin-right: 0.25rem;
+    }
+
+    .tree-node__field-name::after {
+        content: ":";
     }
 
     .tree-node__type {
