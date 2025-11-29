@@ -1,13 +1,13 @@
+import type { ASTNode, ParseError } from '$lib/core/types';
 import { get } from 'svelte/store';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   astStore,
-  parseErrorStore,
-  selectedNodeStore,
   expandedNodesStore,
   highlightedRangeStore,
+  parseErrorStore,
+  selectedNodeStore,
 } from './ast-store';
-import type { ASTNode, ParseError } from '$lib/core/types';
 
 describe('ast-store', () => {
   beforeEach(() => {
@@ -26,11 +26,11 @@ describe('ast-store', () => {
 
     it('should update AST node', () => {
       const mockAst: ASTNode = {
-        id: 'test-1',
         type: 'File',
         pos: 1,
         end: 100,
         children: [],
+        metadata: {},
       };
 
       astStore.set(mockAst);
@@ -39,11 +39,11 @@ describe('ast-store', () => {
 
     it('should clear AST node', () => {
       const mockAst: ASTNode = {
-        id: 'test-1',
         type: 'File',
         pos: 1,
         end: 100,
         children: [],
+        metadata: {},
       };
 
       astStore.set(mockAst);
@@ -88,11 +88,11 @@ describe('ast-store', () => {
 
     it('should update selected node', () => {
       const mockNode: ASTNode = {
-        id: 'test-node-1',
         type: 'Ident',
         pos: 10,
         end: 15,
-        value: 'main',
+        children: [],
+        metadata: { name: 'main' },
       };
 
       selectedNodeStore.set(mockNode);
@@ -101,11 +101,11 @@ describe('ast-store', () => {
 
     it('should clear selected node', () => {
       const mockNode: ASTNode = {
-        id: 'test-node-1',
         type: 'Ident',
         pos: 10,
         end: 15,
-        value: 'main',
+        children: [],
+        metadata: { name: 'main' },
       };
 
       selectedNodeStore.set(mockNode);

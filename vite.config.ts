@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { defineConfig, type Plugin } from 'vite';
+import { type Plugin, defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // WASMファイルをインライン化するカスタムプラグイン
