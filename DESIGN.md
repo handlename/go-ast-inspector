@@ -2,11 +2,12 @@
 
 ## Document Information
 
-**Version**: 1.3  
+**Version**: 1.4  
 **Created**: 2025-11-23  
-**Last Updated**: 2025-11-24  
+**Last Updated**: 2025-11-29  
 **Related Documents**: [REQUIREMENTS.md](./REQUIREMENTS.md)  
 **Revision History**:
+- v1.4: Updated build scripts, added test configuration, updated directory structure
 - v1.3: Removed HoverTooltip (requirements change), added HeaderBar, reorganized documentation to reflect implementation completion
 - v1.2: Added bidirectional highlight feature (source code ↔ AST tree linking), added highlightedRangeStore
 - v1.1: Changed UI framework to Svelte 5.x, completely revised component design
@@ -147,15 +148,19 @@ go-ast-inspector/
 │   ├── wasm/
 │   │   ├── parser.go           # Go AST parser implementation
 │   │   ├── main.go             # WASM entry point
+│   │   ├── go.mod              # Go module definition
 │   │   └── build.sh            # WASM build script
 │   ├── lib/
 │   │   ├── stores/
-│   │   │   ├── ast-store.ts    # AST state management (Svelte Store)
-│   │   │   └── editor-store.ts # Editor state management (Svelte Store)
+│   │   │   ├── ast-store.ts        # AST state management (Svelte Store)
+│   │   │   ├── ast-store.test.ts   # AST store unit tests
+│   │   │   ├── editor-store.ts     # Editor state management (Svelte Store)
+│   │   │   └── editor-store.test.ts # Editor store unit tests
 │   │   ├── core/
-│   │   │   ├── parser-bridge.ts    # WASM bridge
-│   │   │   ├── position-mapper.ts  # Position mapping
-│   │   │   └── types.ts            # Common type definitions
+│   │   │   ├── parser-bridge.ts        # WASM bridge
+│   │   │   ├── position-mapper.ts      # Position mapping
+│   │   │   ├── position-mapper.test.ts # Position mapper unit tests
+│   │   │   └── types.ts                # Common type definitions
 │   │   └── utils/
 │   │       └── constants.ts        # Constants definition
 │   ├── components/
@@ -167,16 +172,21 @@ go-ast-inspector/
 │   └── styles/
 │       └── global.css              # Global styles
 ├── public/
-│   └── index.html              # HTML template
+│   ├── parser.wasm             # Built WASM binary (generated)
+│   └── wasm_exec.js            # Go WASM runtime (generated)
 ├── dist/                       # Build output (single HTML file)
+├── e2e/                        # E2E test files
 ├── vite.config.ts              # Vite configuration
+├── vitest.config.ts            # Vitest configuration
+├── playwright.config.ts        # Playwright configuration
 ├── svelte.config.js            # Svelte configuration
 ├── biome.json                  # Biome configuration
 ├── tsconfig.json               # TypeScript configuration
 ├── package.json                # npm configuration
 ├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Pages deployment workflow
+│   ├── workflows/
+│   │   └── deploy.yml          # GitHub Pages deployment workflow
+│   └── pull_request_template.md # Pull request template
 ├── REQUIREMENTS.md             # Requirements document
 ├── DESIGN.md                   # Technical design document (this document)
 └── README.md                   # Project description
@@ -721,7 +731,14 @@ export default {
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "type-check": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit"
+    "type-check": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "svelte": "^5.0.0"
@@ -729,9 +746,14 @@ export default {
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@biomejs/biome": "^1.9.0",
+    "@playwright/test": "^1.56.0",
+    "@testing-library/svelte": "^5.2.0",
+    "@vitest/ui": "^4.0.0",
+    "jsdom": "^27.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0",
     "vite-plugin-singlefile": "^2.0.0",
+    "vitest": "^4.0.0",
     "svelte-check": "^4.0.0"
   }
 }
@@ -743,14 +765,28 @@ export default {
 #!/bin/bash
 set -e
 
-echo "Building Go WebAssembly..."
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+OUTPUT_DIR="$SCRIPT_DIR/../../public"
 
-GOOS=js GOARCH=wasm go build -o ../../public/parser.wasm main.go parser.go
+mkdir -p "$OUTPUT_DIR"
+
+echo "Building Go WebAssembly..."
+GOOS=js GOARCH=wasm go build -o "$OUTPUT_DIR/parser.wasm" "$SCRIPT_DIR"
 
 echo "Copying wasm_exec.js..."
-cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" ../../public/
+GOROOT=$(go env GOROOT)
+if [ -f "$GOROOT/lib/wasm/wasm_exec.js" ]; then
+  rm -f "$OUTPUT_DIR/wasm_exec.js"
+  cp "$GOROOT/lib/wasm/wasm_exec.js" "$OUTPUT_DIR/wasm_exec.js"
+elif [ -f "$GOROOT/misc/wasm/wasm_exec.js" ]; then
+  rm -f "$OUTPUT_DIR/wasm_exec.js"
+  cp "$GOROOT/misc/wasm/wasm_exec.js" "$OUTPUT_DIR/wasm_exec.js"
+else
+  echo "Error: wasm_exec.js not found"
+  exit 1
+fi
 
-echo "WASM build complete!"
+echo "WebAssembly build complete!"
 ```
 
 ---
