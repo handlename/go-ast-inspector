@@ -24,8 +24,8 @@ Visit the [live demo](https://handlename.github.io/go-ast-inspector/) and start 
 
 ### Offline
 
-1. Download `dist/index.html` from the [releases page](https://github.com/handlename/go-ast-inspector/releases)
-2. Open the file in your web browser
+1. Build the project locally (see [Development](#development) section)
+2. Open `dist/index.html` in your web browser
 3. Enter or paste Go source code into the left editor
 4. The AST tree will be displayed on the right side
 
@@ -115,8 +115,7 @@ go-ast-inspector/
 │   ├── parser.wasm
 │   └── wasm_exec.js
 ├── REQUIREMENTS.md        # Requirements specification
-├── DESIGN.md              # Technical design
-└── TASKS.md               # Implementation tasks
+└── DESIGN.md              # Technical design
 
 ```
 
@@ -152,13 +151,9 @@ This approach enables:
 - Offline operation
 - Easy distribution and deployment
 
-## Browser Compatibility
+## Requirements
 
-- Chrome/Edge: 88+
-- Firefox: 89+
-- Safari: 15+
-
-WebAssembly support is required.
+A modern web browser with WebAssembly support is required.
 
 ## License
 
