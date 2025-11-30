@@ -89,15 +89,30 @@ Provide a tool that retrieves the Abstract Syntax Tree (AST) from Go language so
 - Toggle expand/collapse with click operation
 - Configurable default expansion level (e.g., expand up to 2 levels)
 - Provide expand all/collapse all functionality
+- **Keyboard Navigation**:
+  - Arrow Up/Down: Move to previous/next visible node
+  - Arrow Right: Expand collapsed node, or move to first child if already expanded
+  - Arrow Left: Collapse expanded node, or move to parent if already collapsed
+  - Home / Cmd+Arrow Up: Move to first node (root)
+  - End / Cmd+Arrow Down: Move to last visible node
+  - Asterisk (*): Expand current node and all its descendants
+- **Focus Indicator**:
+  - Display blue outline when tree has keyboard focus
+  - Display light blue background for selected node (even when tree loses focus)
 
 **Rationale**: 
 - When handling large ASTs, can focus on only necessary parts
 - Improved usability
+- Keyboard navigation enables efficient tree exploration without mouse
 
 **Verification Criteria**:
 - [ ] Can expand/collapse each node by clicking
 - [ ] Expansion state is visually identifiable (e.g., arrow icon)
 - [ ] Expand all/collapse all buttons function correctly
+- [ ] Arrow keys navigate between visible nodes
+- [ ] Home/End keys (or Cmd+Arrow on Mac) jump to first/last node
+- [ ] Focus indicator is visible when navigating with keyboard
+- [ ] Selected node remains highlighted when focus leaves the tree
 
 **Dependencies**: FR-003
 
@@ -376,10 +391,11 @@ This command will create a technical design document based on this requirements 
 
 ---
 
-**Document Version**: 1.3  
+**Document Version**: 1.4  
 **Created**: 2025-11-23  
-**Last Updated**: 2025-11-24  
+**Last Updated**: 2025-11-30  
 **Update History**:
+- v1.4: Added keyboard navigation to FR-004 (arrow keys, Home/End, asterisk for subtree expansion)
 - v1.3: Expanded FR-005 to bidirectional synchronized display (added source code highlight feature)
 - v1.2: Changed UI framework to Svelte 5.x, specified TypeScript
 - v1.1: Reflected technology selection decisions, removed export functionality, clarified target users
