@@ -246,7 +246,11 @@ function scrollToPosition(astPosition: number) {
     }
 
     .code-editor__header {
+        display: flex;
+        align-items: center;
+        min-height: 3.25rem;
         padding: 0.75rem 1rem;
+        box-sizing: border-box;
         background-color: #f5f5f5;
         border-bottom: 1px solid #e0e0e0;
     }
