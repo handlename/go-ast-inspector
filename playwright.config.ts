@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'html',
   timeout: 30000,
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173',
     trace: 'on-first-retry',
     actionTimeout: 10000,
   },
@@ -38,9 +38,10 @@ export default defineConfig({
         },
       ],
 
+  // In CI, use preview server (faster, pre-built). Locally, use dev server.
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: process.env.CI ? 'npm run preview' : 'npm run dev',
+    url: process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
