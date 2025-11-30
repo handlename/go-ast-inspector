@@ -1,186 +1,205 @@
 <script lang="ts">
-import type { ASTNode } from '$lib/core/types';
-import {
-  astStore,
-  expandedNodesStore,
-  focusedNodeIdStore,
-  selectedNodeStore,
-} from '$lib/stores/ast-store';
-import { DEFAULT_EXPAND_LEVEL } from '$lib/utils/constants';
-import {
-  buildNodeMap,
-  collectDescendantIds,
-  flattenTree,
-  getFirstChildNodeId,
-  getFirstVisibleNodeId,
-  getLastVisibleNodeId,
-  getNextVisibleNodeId,
-  getParentNodeId,
-  getPreviousVisibleNodeId,
-  getVisibleNodeIds,
-} from '$lib/utils/tree-navigation';
-import TreeNode from './TreeNode.svelte';
+    import type { ASTNode } from "$lib/core/types";
+    import {
+        astStore,
+        expandedNodesStore,
+        focusedNodeIdStore,
+        selectedNodeStore,
+    } from "$lib/stores/ast-store";
+    import { DEFAULT_EXPAND_LEVEL } from "$lib/utils/constants";
+    import {
+        buildNodeMap,
+        collectDescendantIds,
+        flattenTree,
+        getFirstChildNodeId,
+        getFirstVisibleNodeId,
+        getLastVisibleNodeId,
+        getNextVisibleNodeId,
+        getParentNodeId,
+        getPreviousVisibleNodeId,
+        getVisibleNodeIds,
+    } from "$lib/utils/tree-navigation";
+    import KeyboardShortcutHelp from "./KeyboardShortcutHelp.svelte";
+    import TreeNode from "./TreeNode.svelte";
 
-const flatNodes = $derived($astStore ? flattenTree($astStore) : []);
-const nodeMap = $derived(buildNodeMap(flatNodes));
-const visibleNodeIds = $derived(getVisibleNodeIds(flatNodes, $expandedNodesStore));
+    let isHelpOpen = $state(false);
 
-function expandAll() {
-  if (!$astStore) return;
+    const flatNodes = $derived($astStore ? flattenTree($astStore) : []);
+    const nodeMap = $derived(buildNodeMap(flatNodes));
+    const visibleNodeIds = $derived(
+        getVisibleNodeIds(flatNodes, $expandedNodesStore),
+    );
 
-  const allNodeIds = new Set<string>();
-  collectNodeIds($astStore, allNodeIds);
-  expandedNodesStore.set(allNodeIds);
-}
+    function expandAll() {
+        if (!$astStore) return;
 
-function collapseAll() {
-  expandedNodesStore.set(new Set());
-}
-
-function collectNodeIds(node: ASTNode, ids: Set<string>, prefix = '0'): void {
-  ids.add(prefix);
-  node.children.forEach((child, index) => {
-    collectNodeIds(child, ids, `${prefix}-${index}`);
-  });
-}
-
-function focusNode(nodeId: string, alsoSelect = true) {
-  focusedNodeIdStore.set(nodeId);
-  if (alsoSelect) {
-    const flatNode = nodeMap.get(nodeId);
-    if (flatNode) {
-      selectedNodeStore.set(flatNode.node);
-    }
-  }
-}
-
-function expandSubtree(nodeId: string) {
-  const descendantIds = collectDescendantIds(nodeId, nodeMap);
-  expandedNodesStore.update((nodes) => {
-    const newNodes = new Set(nodes);
-    for (const id of descendantIds) {
-      newNodes.add(id);
-    }
-    return newNodes;
-  });
-}
-
-function handleTreeKeydown(e: KeyboardEvent) {
-  const currentNodeId = $focusedNodeIdStore;
-  if (!currentNodeId) {
-    if (e.key === 'ArrowDown' || e.key === 'Home') {
-      const firstId = getFirstVisibleNodeId(visibleNodeIds);
-      if (firstId) {
-        e.preventDefault();
-        focusNode(firstId);
-      }
-    }
-    return;
-  }
-
-  const flatNode = nodeMap.get(currentNodeId);
-  if (!flatNode) return;
-
-  const hasChildren = flatNode.childIds.length > 0;
-  const isExpanded = $expandedNodesStore.has(currentNodeId);
-
-  // Cmd+ArrowUp/Down as Mac alternative for Home/End
-  if (e.metaKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-    e.preventDefault();
-    if (e.key === 'ArrowUp') {
-      const firstId = getFirstVisibleNodeId(visibleNodeIds);
-      if (firstId) {
-        focusNode(firstId);
-      }
-    } else {
-      const lastId = getLastVisibleNodeId(visibleNodeIds);
-      if (lastId) {
-        focusNode(lastId);
-      }
-    }
-    return;
-  }
-
-  switch (e.key) {
-    case 'ArrowUp': {
-      e.preventDefault();
-      const prevId = getPreviousVisibleNodeId(currentNodeId, visibleNodeIds);
-      if (prevId) {
-        focusNode(prevId);
-      }
-      break;
+        const allNodeIds = new Set<string>();
+        collectNodeIds($astStore, allNodeIds);
+        expandedNodesStore.set(allNodeIds);
     }
 
-    case 'ArrowDown': {
-      e.preventDefault();
-      const nextId = getNextVisibleNodeId(currentNodeId, visibleNodeIds);
-      if (nextId) {
-        focusNode(nextId);
-      }
-      break;
+    function collapseAll() {
+        expandedNodesStore.set(new Set());
     }
 
-    case 'ArrowRight': {
-      e.preventDefault();
-      if (hasChildren) {
-        if (!isExpanded) {
-          expandedNodesStore.update((nodes) => {
-            const newNodes = new Set(nodes);
-            newNodes.add(currentNodeId);
-            return newNodes;
-          });
-        } else {
-          const firstChildId = getFirstChildNodeId(currentNodeId, nodeMap, $expandedNodesStore);
-          if (firstChildId) {
-            focusNode(firstChildId);
-          }
-        }
-      }
-      break;
-    }
-
-    case 'ArrowLeft': {
-      e.preventDefault();
-      if (hasChildren && isExpanded) {
-        expandedNodesStore.update((nodes) => {
-          const newNodes = new Set(nodes);
-          newNodes.delete(currentNodeId);
-          return newNodes;
+    function collectNodeIds(
+        node: ASTNode,
+        ids: Set<string>,
+        prefix = "0",
+    ): void {
+        ids.add(prefix);
+        node.children.forEach((child, index) => {
+            collectNodeIds(child, ids, `${prefix}-${index}`);
         });
-      } else {
-        const parentId = getParentNodeId(currentNodeId);
-        if (parentId) {
-          focusNode(parentId);
+    }
+
+    function focusNode(nodeId: string, alsoSelect = true) {
+        focusedNodeIdStore.set(nodeId);
+        if (alsoSelect) {
+            const flatNode = nodeMap.get(nodeId);
+            if (flatNode) {
+                selectedNodeStore.set(flatNode.node);
+            }
         }
-      }
-      break;
     }
 
-    case 'Home': {
-      e.preventDefault();
-      const firstId = getFirstVisibleNodeId(visibleNodeIds);
-      if (firstId) {
-        focusNode(firstId);
-      }
-      break;
+    function expandSubtree(nodeId: string) {
+        const descendantIds = collectDescendantIds(nodeId, nodeMap);
+        expandedNodesStore.update((nodes) => {
+            const newNodes = new Set(nodes);
+            for (const id of descendantIds) {
+                newNodes.add(id);
+            }
+            return newNodes;
+        });
     }
 
-    case 'End': {
-      e.preventDefault();
-      const lastId = getLastVisibleNodeId(visibleNodeIds);
-      if (lastId) {
-        focusNode(lastId);
-      }
-      break;
-    }
+    function handleTreeKeydown(e: KeyboardEvent) {
+        const currentNodeId = $focusedNodeIdStore;
+        if (!currentNodeId) {
+            if (e.key === "ArrowDown" || e.key === "Home") {
+                const firstId = getFirstVisibleNodeId(visibleNodeIds);
+                if (firstId) {
+                    e.preventDefault();
+                    focusNode(firstId);
+                }
+            }
+            return;
+        }
 
-    case '*': {
-      e.preventDefault();
-      expandSubtree(currentNodeId);
-      break;
+        const flatNode = nodeMap.get(currentNodeId);
+        if (!flatNode) return;
+
+        const hasChildren = flatNode.childIds.length > 0;
+        const isExpanded = $expandedNodesStore.has(currentNodeId);
+
+        // Cmd+ArrowUp/Down as Mac alternative for Home/End
+        if (e.metaKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+            e.preventDefault();
+            if (e.key === "ArrowUp") {
+                const firstId = getFirstVisibleNodeId(visibleNodeIds);
+                if (firstId) {
+                    focusNode(firstId);
+                }
+            } else {
+                const lastId = getLastVisibleNodeId(visibleNodeIds);
+                if (lastId) {
+                    focusNode(lastId);
+                }
+            }
+            return;
+        }
+
+        switch (e.key) {
+            case "ArrowUp": {
+                e.preventDefault();
+                const prevId = getPreviousVisibleNodeId(
+                    currentNodeId,
+                    visibleNodeIds,
+                );
+                if (prevId) {
+                    focusNode(prevId);
+                }
+                break;
+            }
+
+            case "ArrowDown": {
+                e.preventDefault();
+                const nextId = getNextVisibleNodeId(
+                    currentNodeId,
+                    visibleNodeIds,
+                );
+                if (nextId) {
+                    focusNode(nextId);
+                }
+                break;
+            }
+
+            case "ArrowRight": {
+                e.preventDefault();
+                if (hasChildren) {
+                    if (!isExpanded) {
+                        expandedNodesStore.update((nodes) => {
+                            const newNodes = new Set(nodes);
+                            newNodes.add(currentNodeId);
+                            return newNodes;
+                        });
+                    } else {
+                        const firstChildId = getFirstChildNodeId(
+                            currentNodeId,
+                            nodeMap,
+                            $expandedNodesStore,
+                        );
+                        if (firstChildId) {
+                            focusNode(firstChildId);
+                        }
+                    }
+                }
+                break;
+            }
+
+            case "ArrowLeft": {
+                e.preventDefault();
+                if (hasChildren && isExpanded) {
+                    expandedNodesStore.update((nodes) => {
+                        const newNodes = new Set(nodes);
+                        newNodes.delete(currentNodeId);
+                        return newNodes;
+                    });
+                } else {
+                    const parentId = getParentNodeId(currentNodeId);
+                    if (parentId) {
+                        focusNode(parentId);
+                    }
+                }
+                break;
+            }
+
+            case "Home": {
+                e.preventDefault();
+                const firstId = getFirstVisibleNodeId(visibleNodeIds);
+                if (firstId) {
+                    focusNode(firstId);
+                }
+                break;
+            }
+
+            case "End": {
+                e.preventDefault();
+                const lastId = getLastVisibleNodeId(visibleNodeIds);
+                if (lastId) {
+                    focusNode(lastId);
+                }
+                break;
+            }
+
+            case "*": {
+                e.preventDefault();
+                expandSubtree(currentNodeId);
+                break;
+            }
+        }
     }
-  }
-}
 </script>
 
 <div class="ast-tree-view">
@@ -200,6 +219,14 @@ function handleTreeKeydown(e: KeyboardEvent) {
                 aria-label="Collapse all tree nodes"
             >
                 Collapse All
+            </button>
+            <button
+                class="ast-tree-view__help-button"
+                onclick={() => (isHelpOpen = true)}
+                aria-label="Show keyboard shortcuts"
+                title="Keyboard shortcuts"
+            >
+                ?
             </button>
         </div>
     </div>
@@ -226,6 +253,11 @@ function handleTreeKeydown(e: KeyboardEvent) {
         {/if}
     </div>
 </div>
+
+<KeyboardShortcutHelp
+    isOpen={isHelpOpen}
+    onClose={() => (isHelpOpen = false)}
+/>
 
 <style>
     .ast-tree-view {
@@ -268,6 +300,27 @@ function handleTreeKeydown(e: KeyboardEvent) {
 
     .ast-tree-view__button:hover {
         background-color: #2980b9;
+    }
+
+    .ast-tree-view__help-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background-color: #95a5a6;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .ast-tree-view__help-button:hover {
+        background-color: #7f8c8d;
     }
 
     .ast-tree-view__content {
