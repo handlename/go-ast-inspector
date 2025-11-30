@@ -1,4 +1,23 @@
-import { expect, test } from '@playwright/test';
+import { type Page, expect, test } from '@playwright/test';
+
+/**
+ * Wait for WASM to initialize and AST tree to be rendered
+ */
+async function waitForAstTreeReady(page: Page): Promise<void> {
+  await expect(page.locator('.ast-tree-view .tree-node').first()).toBeVisible({
+    timeout: 10000,
+  });
+}
+
+/**
+ * Wait for AST to be re-parsed after code change
+ */
+async function waitForAstParsed(page: Page): Promise<void> {
+  // Wait for File node to appear (indicates successful parse)
+  await expect(page.locator('.tree-node__type').filter({ hasText: 'File' }).first()).toBeVisible({
+    timeout: 5000,
+  });
+}
 
 test.describe('Go AST Inspector - Basic Functionality', () => {
   test('should load the application', async ({ page }) => {
@@ -33,7 +52,7 @@ test.describe('Go AST Inspector - Basic Functionality', () => {
     await page.goto('/');
 
     // Wait for WASM to initialize and parse
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // Check if AST tree is visible
     const astTree = page.locator('.ast-tree-view');
@@ -51,7 +70,7 @@ test.describe('Go AST Inspector - Basic Functionality', () => {
 
   test('should parse user-entered code', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     const textarea = page.locator('.code-editor textarea');
 
@@ -63,60 +82,53 @@ func add(a, b int) int {
 \treturn a + b
 }`);
 
-    // Wait for parsing
-    await page.waitForTimeout(1000);
+    // Wait for parsing - check for FuncDecl node to appear
+    await expect(page.locator('.tree-node__type').filter({ hasText: 'FuncDecl' })).toBeVisible({
+      timeout: 5000,
+    });
 
     // Check AST tree updated
     await expect(
       page.locator('.tree-node__type').filter({ hasText: 'File' }).first(),
     ).toBeVisible();
-    await expect(page.locator('.tree-node__type').filter({ hasText: 'FuncDecl' })).toBeVisible();
   });
 
   test('should handle invalid code gracefully', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     const textarea = page.locator('.code-editor textarea');
 
     // Enter invalid code
     await textarea.fill('invalid go code ][}{');
 
-    // Wait for parsing
-    await page.waitForTimeout(1000);
-
-    // Application should still be functional
+    // Application should still be functional (textarea and tree view remain visible)
     await expect(textarea).toBeVisible();
     await expect(page.locator('.ast-tree-view')).toBeVisible();
   });
 
   test('should expand and collapse AST nodes', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // Find a node with children (File node)
     const fileNode = page.locator('.tree-node').filter({ hasText: 'File' }).first();
     await expect(fileNode).toBeVisible();
 
-    // Click to toggle
+    // Click to toggle (collapse)
     await fileNode.locator('.tree-node__line').first().click();
-    await page.waitForTimeout(200);
 
-    // Toggle again
+    // Toggle again (expand)
     await fileNode.locator('.tree-node__line').first().click();
-    await page.waitForTimeout(200);
   });
 
   test('should highlight source code when AST node is clicked', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // Click on any node in the tree
     const treeNode = page.locator('.tree-node__line').first();
     await treeNode.click();
-
-    // Wait for highlight to appear
-    await page.waitForTimeout(500);
 
     // Check if any highlight-related element exists
     // (The actual implementation may vary)
@@ -126,7 +138,9 @@ func add(a, b int) int {
 
   test('should have working Expand All button', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
+
+    const initialNodeCount = await page.locator('.tree-node').count();
 
     const expandAllButton = page.getByRole('button', {
       name: /Expand all/i,
@@ -134,7 +148,11 @@ func add(a, b int) int {
     await expect(expandAllButton).toBeVisible();
     await expandAllButton.click();
 
-    await page.waitForTimeout(500);
+    // Wait for more nodes to appear after expansion
+    await expect(async () => {
+      const newCount = await page.locator('.tree-node').count();
+      expect(newCount).toBeGreaterThan(initialNodeCount);
+    }).toPass({ timeout: 5000 });
 
     // Check that we can see deeper nodes
     const nodeCount = await page.locator('.tree-node').count();
@@ -143,11 +161,13 @@ func add(a, b int) int {
 
   test('should have working Collapse All button', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // First expand all
     await page.getByRole('button', { name: /Expand all/i }).click();
-    await page.waitForTimeout(500);
+
+    // Wait for expansion to complete
+    const expandedCount = await page.locator('.tree-node').count();
 
     // Then collapse all
     const collapseAllButton = page.getByRole('button', {
@@ -156,6 +176,10 @@ func add(a, b int) int {
     await expect(collapseAllButton).toBeVisible();
     await collapseAllButton.click();
 
-    await page.waitForTimeout(500);
+    // Wait for collapse to complete - node count should decrease
+    await expect(async () => {
+      const newCount = await page.locator('.tree-node').count();
+      expect(newCount).toBeLessThan(expandedCount);
+    }).toPass({ timeout: 5000 });
   });
 });
