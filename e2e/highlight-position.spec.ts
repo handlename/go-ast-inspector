@@ -1,5 +1,23 @@
 import { type Page, expect, test } from '@playwright/test';
 
+/**
+ * Wait for WASM to initialize and AST tree to be rendered
+ */
+async function waitForAstTreeReady(page: Page): Promise<void> {
+  await expect(page.locator('.ast-tree-view .tree-node').first()).toBeVisible({
+    timeout: 10000,
+  });
+}
+
+/**
+ * Wait for AST to be re-parsed after code change (check for FuncDecl in this test file)
+ */
+async function waitForCodeParsed(page: Page): Promise<void> {
+  await expect(
+    page.locator('.tree-node__type').filter({ hasText: 'FuncDecl' }).first(),
+  ).toBeVisible({ timeout: 5000 });
+}
+
 // Long Go code sample for testing highlight position with line wrapping
 const LONG_GO_CODE = `package core
 
@@ -73,12 +91,12 @@ func List(ctx context.Context, ids []ecore.DeviceID) ([]ecore.Device, error) {
 test.describe('Highlight Position Accuracy', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // Enter the long Go code
     const textarea = page.locator('.code-editor textarea');
     await textarea.fill(LONG_GO_CODE);
-    await page.waitForTimeout(1000);
+    await waitForCodeParsed(page);
   });
 
   test('should accurately position highlight for nodes at various positions', async ({ page }) => {
@@ -93,7 +111,6 @@ test.describe('Highlight Position Accuracy', () => {
     for (const index of testIndices) {
       const treeNode = treeNodes.nth(index);
       await treeNode.click();
-      await page.waitForTimeout(300);
 
       // Check if highlight mark exists
       const highlightMark = page.locator('.code-editor__syntax-pre .code-highlight');
@@ -121,7 +138,6 @@ test.describe('Highlight Position Accuracy', () => {
   test('should maintain highlight-cursor alignment with narrow viewport', async ({ page }) => {
     // Set narrow viewport to force line wrapping
     await page.setViewportSize({ width: 800, height: 600 });
-    await page.waitForTimeout(500);
 
     // Click on a function node in the middle of the code
     const funcNodes = page.locator('.tree-node__type').filter({ hasText: 'FuncDecl' });
@@ -130,7 +146,6 @@ test.describe('Highlight Position Accuracy', () => {
     if (funcCount > 1) {
       // Click on the second function (UpdateTxn)
       await funcNodes.nth(1).click();
-      await page.waitForTimeout(300);
 
       // Verify highlight exists
       const highlightMark = page.locator('.code-editor__syntax-pre .code-highlight');
@@ -169,7 +184,6 @@ test.describe('Highlight Position Accuracy', () => {
           y: textareaBox.height / 2,
         },
       });
-      await page.waitForTimeout(300);
 
       // Check if highlight appeared
       const highlightMark = page.locator('.code-editor__syntax-pre .code-highlight');
@@ -288,14 +302,14 @@ test.describe('Highlight Position Accuracy', () => {
 test.describe('Detailed Position Analysis', () => {
   test('should measure line-by-line height accumulation', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     // Set narrow viewport to force line wrapping
     await page.setViewportSize({ width: 600, height: 600 });
 
     const textarea = page.locator('.code-editor textarea');
     await textarea.fill(LONG_GO_CODE);
-    await page.waitForTimeout(1000);
+    await waitForCodeParsed(page);
 
     // Measure line heights by inserting markers at specific offsets
     const linePositions = await page.evaluate((code: string) => {
@@ -397,11 +411,11 @@ test.describe('Detailed Position Analysis', () => {
 
   test('should verify code element has no extra styles', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await waitForAstTreeReady(page);
 
     const textarea = page.locator('.code-editor textarea');
     await textarea.fill(LONG_GO_CODE);
-    await page.waitForTimeout(1000);
+    await waitForCodeParsed(page);
 
     // Check if the <code> element inside <pre> adds any extra styling
     const codeStyles = await page.evaluate(() => {
