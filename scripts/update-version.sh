@@ -1,10 +1,17 @@
 #!/bin/bash
 set -e
 
-VERSION=$(jq -r '.version' package.json)
+# When run by tagpr, TAGPR_NEXT_VERSION contains the version to be released (e.g., "v0.2.1")
+# When run manually, fall back to reading from package.json
+if [ -n "$TAGPR_NEXT_VERSION" ]; then
+    # Remove 'v' prefix if present (e.g., "v0.2.1" -> "0.2.1")
+    VERSION="${TAGPR_NEXT_VERSION#v}"
+else
+    VERSION=$(jq -r '.version' package.json)
+fi
 
 if [ -z "$VERSION" ]; then
-    echo "Error: Could not read version from package.json" >&2
+    echo "Error: Could not determine version" >&2
     exit 1
 fi
 
