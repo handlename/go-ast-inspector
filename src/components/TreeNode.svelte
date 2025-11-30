@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ASTNode } from '$lib/core/types';
-import { expandedNodesStore, selectedNodeStore } from '$lib/stores/ast-store';
+import { expandedNodesStore, focusedNodeIdStore, selectedNodeStore } from '$lib/stores/ast-store';
 
 interface Props {
   node: ASTNode;
@@ -18,6 +18,7 @@ const isExpanded = $derived($expandedNodesStore.has(nodeId));
 const isSelected = $derived(
   $selectedNodeStore?.pos === node.pos && $selectedNodeStore?.end === node.end,
 );
+const isFocused = $derived($focusedNodeIdStore === nodeId);
 const hasChildren = $derived(node.children && node.children.length > 0);
 
 function toggleExpand() {
@@ -34,6 +35,7 @@ function toggleExpand() {
 
 function handleClick() {
   selectedNodeStore.set(node);
+  focusedNodeIdStore.set(nodeId);
 }
 
 function formatMetadata(metadata: Record<string, unknown>): string {
@@ -51,20 +53,37 @@ function formatMetadata(metadata: Record<string, unknown>): string {
 
 const metadataStr = $derived(formatMetadata(node.metadata));
 
+let initialExpandDone = false;
+
 $effect(() => {
-  // Default expand level
-  if (level < defaultExpandLevel && hasChildren && !isExpanded) {
+  // Default expand level - only on initial mount
+  if (!initialExpandDone && level < defaultExpandLevel && hasChildren) {
     expandedNodesStore.update((nodes) => {
       const newNodes = new Set(nodes);
       newNodes.add(nodeId);
       return newNodes;
     });
+    initialExpandDone = true;
   }
 });
 
+let previousSelectedNode: ASTNode | null = null;
+
 $effect(() => {
-  // Auto-expand to selected node
-  if ($selectedNodeStore && isNodeOrAncestor($selectedNodeStore, node) && hasChildren) {
+  // Auto-expand to selected node only when selection changes
+  // (e.g., clicking in the editor to select a position)
+  const currentSelected = $selectedNodeStore;
+  const selectionChanged = currentSelected !== previousSelectedNode;
+  previousSelectedNode = currentSelected;
+
+  if (
+    selectionChanged &&
+    currentSelected &&
+    hasChildren &&
+    !isExpanded &&
+    isNodeOrAncestor(currentSelected, node) &&
+    !isSelected
+  ) {
     expandedNodesStore.update((nodes) => {
       const newNodes = new Set(nodes);
       newNodes.add(nodeId);
@@ -95,34 +114,34 @@ $effect(() => {
     });
   }
 });
+
+$effect(() => {
+  if (isFocused && nodeElement) {
+    nodeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }
+});
 </script>
 
 <div
     class="tree-node"
     class:tree-node--selected={isSelected}
+    class:tree-node--focused={isFocused}
     bind:this={nodeElement}
     role="treeitem"
     aria-expanded={hasChildren ? isExpanded : undefined}
     aria-selected={isSelected}
     aria-level={level + 1}
+    data-node-id={nodeId}
 >
+    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+    <!-- Keyboard navigation is handled at the tree container level (ASTTreeView) -->
     <div
         class="tree-node__line"
         style="padding-left: {level * 1.5}rem"
         onclick={handleClick}
-        tabindex="0"
-        onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleClick();
-            } else if (e.key === "ArrowRight" && hasChildren && !isExpanded) {
-                e.preventDefault();
-                toggleExpand();
-            } else if (e.key === "ArrowLeft" && hasChildren && isExpanded) {
-                e.preventDefault();
-                toggleExpand();
-            }
-        }}
     >
         {#if hasChildren}
             <button
@@ -156,6 +175,7 @@ $effect(() => {
     {#if isExpanded && hasChildren}
         <div class="tree-node__children">
             {#each node.children as child, index}
+                <!-- svelte-ignore svelte_self_deprecated -->
                 <svelte:self
                     node={child}
                     level={level + 1}
@@ -184,9 +204,18 @@ $effect(() => {
         background-color: #e8f4f8;
     }
 
-    .tree-node--selected .tree-node__line {
+    .tree-node--selected > .tree-node__line {
         background-color: #d4e9f7;
         font-weight: 600;
+    }
+
+    .tree-node--focused > .tree-node__line {
+        outline: 2px solid #3498db;
+        outline-offset: -2px;
+    }
+
+    .tree-node--selected.tree-node--focused > .tree-node__line {
+        outline-color: #2980b9;
     }
 
     .tree-node__toggle {

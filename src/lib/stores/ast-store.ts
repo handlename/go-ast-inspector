@@ -12,3 +12,5 @@ export const highlightedRangeStore = writable<{
 } | null>(null);
 
 export const sourceCodeStore = writable<string>('');
+
+export const focusedNodeIdStore = writable<string | null>(null);
