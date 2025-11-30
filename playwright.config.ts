@@ -5,7 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // GitHub Actions ubuntu-latest has 2 cores, allow parallel test execution
+  workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
   timeout: 30000,
   use: {
