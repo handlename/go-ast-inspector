@@ -31,7 +31,7 @@ test.describe('Go AST Inspector - Basic Functionality', () => {
     await expect(page.getByRole('banner')).toContainText('Visualize Go Abstract Syntax Tree');
 
     // Check version and links
-    await expect(page.getByRole('banner')).toContainText('v0.2.0');
+    await expect(page.getByRole('banner')).toContainText('v0.2.2');
     await expect(page.getByRole('link', { name: /Repository/i })).toBeVisible();
     await expect(page.locator('a[href*="handlename"]').first()).toBeVisible();
   });
