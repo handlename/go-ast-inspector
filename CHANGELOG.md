@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.2.1](https://github.com/handlename/go-ast-inspector/compare/v0.2.0...v0.2.1) - 2025-11-30
+- fix(ui): align left and right pane header heights by @handlename in https://github.com/handlename/go-ast-inspector/pull/11
+
 ## [v0.2.0](https://github.com/handlename/go-ast-inspector/compare/v0.1.0...v0.2.0) - 2025-11-30
 - feat: add keyboard navigation for AST tree view by @handlename in https://github.com/handlename/go-ast-inspector/pull/7
 - feat: add keyboard shortcut help dialog by @handlename in https://github.com/handlename/go-ast-inspector/pull/9
