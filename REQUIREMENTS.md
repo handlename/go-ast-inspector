@@ -99,6 +99,10 @@ Provide a tool that retrieves the Abstract Syntax Tree (AST) from Go language so
 - **Focus Indicator**:
   - Display blue outline when tree has keyboard focus
   - Display light blue background for selected node (even when tree loses focus)
+- **Keyboard Shortcut Help**:
+  - Provide a help button (?) in the AST tree header to display available keyboard shortcuts
+  - Help dialog/tooltip shows all keyboard navigation shortcuts
+  - Help can be dismissed by clicking outside or pressing Escape
 
 **Rationale**: 
 - When handling large ASTs, can focus on only necessary parts
@@ -113,6 +117,8 @@ Provide a tool that retrieves the Abstract Syntax Tree (AST) from Go language so
 - [ ] Home/End keys (or Cmd+Arrow on Mac) jump to first/last node
 - [ ] Focus indicator is visible when navigating with keyboard
 - [ ] Selected node remains highlighted when focus leaves the tree
+- [ ] Help button displays keyboard shortcut information
+- [ ] Help can be dismissed by clicking outside or pressing Escape
 
 **Dependencies**: FR-003
 
@@ -391,10 +397,11 @@ This command will create a technical design document based on this requirements 
 
 ---
 
-**Document Version**: 1.4  
+**Document Version**: 1.5  
 **Created**: 2025-11-23  
 **Last Updated**: 2025-11-30  
 **Update History**:
+- v1.5: Added keyboard shortcut help display to FR-004
 - v1.4: Added keyboard navigation to FR-004 (arrow keys, Home/End, asterisk for subtree expansion)
 - v1.3: Expanded FR-005 to bidirectional synchronized display (added source code highlight feature)
 - v1.2: Changed UI framework to Svelte 5.x, specified TypeScript

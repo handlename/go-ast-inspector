@@ -119,6 +119,14 @@ Before working on the project, please refer to the following documents:
   Co-Authored-By: Claude <noreply@anthropic.com>
   ```
 
+### Pre-commit Checks
+- MUST convention: Run `npm run lint` before committing
+- MUST convention: Run `npm run type-check` before committing
+- If either command exits with an error, fix the issues before committing
+- Common fixes:
+  - Lint errors: Run `npm run format` to auto-fix formatting issues
+  - Type errors: Fix type mismatches in the reported files
+
 ---
 
 ## Frequently Asked Questions
@@ -165,5 +173,5 @@ A: Not included in MVP, but recommended for quality assurance.
 
 ---
 
-**Last Updated**: 2025-11-29  
-**Version**: 1.1
+**Last Updated**: 2025-11-30  
+**Version**: 1.2

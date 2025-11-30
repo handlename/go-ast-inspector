@@ -19,7 +19,11 @@ import {
   getPreviousVisibleNodeId,
   getVisibleNodeIds,
 } from '$lib/utils/tree-navigation';
+import KeyboardShortcutHelp from './KeyboardShortcutHelp.svelte';
 import TreeNode from './TreeNode.svelte';
+
+// biome-ignore lint/style/useConst: Svelte 5 $state requires let for primitive reassignment
+let isHelpOpen = $state(false);
 
 const flatNodes = $derived($astStore ? flattenTree($astStore) : []);
 const nodeMap = $derived(buildNodeMap(flatNodes));
@@ -201,6 +205,14 @@ function handleTreeKeydown(e: KeyboardEvent) {
             >
                 Collapse All
             </button>
+            <button
+                class="ast-tree-view__help-button"
+                onclick={() => (isHelpOpen = true)}
+                aria-label="Show keyboard shortcuts"
+                title="Keyboard shortcuts"
+            >
+                ?
+            </button>
         </div>
     </div>
 
@@ -226,6 +238,11 @@ function handleTreeKeydown(e: KeyboardEvent) {
         {/if}
     </div>
 </div>
+
+<KeyboardShortcutHelp
+    isOpen={isHelpOpen}
+    onClose={() => (isHelpOpen = false)}
+/>
 
 <style>
     .ast-tree-view {
@@ -268,6 +285,27 @@ function handleTreeKeydown(e: KeyboardEvent) {
 
     .ast-tree-view__button:hover {
         background-color: #2980b9;
+    }
+
+    .ast-tree-view__help-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background-color: #95a5a6;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .ast-tree-view__help-button:hover {
+        background-color: #7f8c8d;
     }
 
     .ast-tree-view__content {
