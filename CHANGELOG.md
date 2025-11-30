@@ -3,6 +3,9 @@
 ## [v0.2.2](https://github.com/handlename/go-ast-inspector/compare/v0.2.1...v0.2.2) - 2025-11-30
 - fix(scripts): use TAGPR_NEXT_VERSION for correct version in update-version.sh by @handlename in https://github.com/handlename/go-ast-inspector/pull/13
 
+## [v0.2.2](https://github.com/handlename/go-ast-inspector/compare/v0.2.1...v0.2.2) - 2025-11-30
+- fix(scripts): use TAGPR_NEXT_VERSION for correct version in update-version.sh by @handlename in https://github.com/handlename/go-ast-inspector/pull/13
+
 ## [v0.2.1](https://github.com/handlename/go-ast-inspector/compare/v0.2.0...v0.2.1) - 2025-11-30
 - fix(ui): align left and right pane header heights by @handlename in https://github.com/handlename/go-ast-inspector/pull/11
 
