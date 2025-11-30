@@ -1,6 +1,6 @@
 {
   "name": "go-ast-inspector",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Browser-based Go AST viewer with standalone operation",
   "type": "module",
   "scripts": {
